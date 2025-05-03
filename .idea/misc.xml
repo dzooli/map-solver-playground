@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="cmdArguments" value="-l 120" />
+    <option name="enabledOnReformat" value="true" />
+    <option name="enabledOnSave" value="true" />
+    <option name="pathToExecutable" value="c:\users\fabia\appdata\roaming\python\python312\scripts\black.exe" />
+    <option name="sdkName" value="uv (electric-car) (2)" />
+  </component>
+</project>
