@@ -4,7 +4,6 @@ This script creates a simple map viewer application with keyboard controls.
 
 import logging
 import importlib.resources
-from idlelib.debugger_r import DictProxy
 from typing import Dict, Any
 
 import pygame
@@ -88,8 +87,13 @@ class MapSolverApp:
         # Main loop control
         self.running = True
 
+        # Mouse click tracking
+        self.click_count = 0
+        self.red_flag_pos = None
+        self.green_flag_pos = None
+
     @measure_time(logger_instance=logger)
-    def load_resources(self) -> Dict[str, Any]:
+    def load_resources(self) -> None:
         """Load resources like images and sounds"""
         for sprite_name in ["redflag001.png", "greenflag001.png"]:
             self.resources[f"img_{sprite_name.split('.')[0]}"] = load_image_with_transparency(
@@ -118,6 +122,8 @@ class MapSolverApp:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 self._handle_key_press(event.key)
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
+                self._handle_mouse_click(event.pos)
         return events
 
     def _handle_key_press(self, key):
@@ -150,6 +156,75 @@ class MapSolverApp:
         """Toggle the visibility of the tooltip panel"""
         self.tooltip_panel.toggle_visibility()
 
+    def _handle_mouse_click(self, pos):
+        """Handle mouse click events for flag placement
+
+        Args:
+            pos: The (x, y) position of the mouse click
+        """
+        # Only handle clicks in high resolution view
+        if self.map_view.current_view != 0:
+            return
+
+        # Check if click is within map boundaries
+        map_x, map_y = self.map_view.image_x, self.map_view.image_y
+        map_width, map_height = self.map_view.image.get_width(), self.map_view.image.get_height()
+
+        # Get flag sprite dimensions
+        flag_width = self.resources["img_redflag001"].get_width()
+        flag_height = self.resources["img_redflag001"].get_height()
+
+        # Calculate the safe area where flags can be placed without exceeding map boundaries
+        # The flag is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
+        safe_x_min = map_x + flag_width // 2
+        safe_x_max = map_x + map_width - flag_width // 2
+        safe_y_min = map_y + flag_height // 2
+        safe_y_max = map_y + map_height - flag_height // 2
+
+        if safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max:
+
+            # Calculate coordinates relative to map's upper left corner
+            rel_x = pos[0] - map_x
+            rel_y = pos[1] - map_y
+
+            # Update click count and handle flag placement
+            if self.click_count == 0:
+                # First click - place red flag
+                self.red_flag_pos = (rel_x, rel_y)
+                self.green_flag_pos = None
+                self.click_count = 1
+                self.status_bar.set_text(f"Red flag placed at ({rel_x}, {rel_y})")
+            elif self.click_count == 1:
+                # Second click - place green flag
+                self.green_flag_pos = (rel_x, rel_y)
+                self.click_count = 2
+                self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
+
+                # Log both coordinates
+                if self._logger:
+                    self._logger.info(f"Red flag: {self.red_flag_pos}, Green flag: {self.green_flag_pos}")
+
+                    # Calculate coordinates on the smaller map
+                    block_size = MAP_SIZE // BLOCKS
+                    red_small_x = self.red_flag_pos[0] // block_size
+                    red_small_y = self.red_flag_pos[1] // block_size
+                    green_small_x = self.green_flag_pos[0] // block_size
+                    green_small_y = self.green_flag_pos[1] // block_size
+
+                    # Log coordinates on the smaller map
+                    self._logger.info(
+                        f"Small map - Red flag: ({red_small_x}, {red_small_y}), Green flag: ({green_small_x}, {green_small_y})"
+                    )
+            else:
+                # Third click - reset and place red flag
+                self.red_flag_pos = (rel_x, rel_y)
+                self.green_flag_pos = None
+                self.click_count = 1
+                self.status_bar.set_text(f"Flags reset. Red flag placed at ({rel_x}, {rel_y})")
+        elif map_x <= pos[0] <= map_x + map_width and map_y <= pos[1] <= map_y + map_height:
+            # Click is within map but too close to the edge for flag placement
+            self.status_bar.set_text("Cannot place flag: too close to map edge")
+
     def _update_info_panel(self):
         """Update the info panel with map information"""
         map_info = self.map_view.get_map_info()
@@ -162,8 +237,36 @@ class MapSolverApp:
     def draw(self):
         """Draw everything to the screen"""
         self.screen.fill(pygame.color.THECOLORS["gray"])
+
         for widget in self.widgets:
             widget.draw()
+
+        # Draw flags if in high resolution view
+        if self.map_view.current_view == 0:
+            # Draw red flag if position is set
+            if self.red_flag_pos:
+                # Calculate screen position from relative map position
+                screen_x = (
+                    self.map_view.image_x + self.red_flag_pos[0] - self.resources["img_redflag001"].get_width() // 2
+                )
+                screen_y = (
+                    self.map_view.image_y + self.red_flag_pos[1] - self.resources["img_redflag001"].get_height() // 2
+                )
+                self.screen.blit(self.resources["img_redflag001"], (screen_x, screen_y))
+
+            # Draw green flag if position is set
+            if self.green_flag_pos:
+                # Calculate screen position from relative map position
+                screen_x = (
+                    self.map_view.image_x + self.green_flag_pos[0] - self.resources["img_greenflag001"].get_width() // 2
+                )
+                screen_y = (
+                    self.map_view.image_y
+                    + self.green_flag_pos[1]
+                    - self.resources["img_greenflag001"].get_height() // 2
+                )
+                self.screen.blit(self.resources["img_greenflag001"], (screen_x, screen_y))
+
         pygame.display.flip()
 
     def run(self):
@@ -184,7 +287,7 @@ class MapSolverApp:
 
 
 def main():
-    app = MapSolverApp()
+    app = MapSolverApp(map_logger=logger)
     app.run()
 
 
