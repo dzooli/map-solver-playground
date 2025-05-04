@@ -19,7 +19,7 @@ class ToolTipPanel(TextPanel):
         height,
         font,
         position=(10, 750),
-        size=(880, 100),
+        size=(880, 115),
         color=None,
     ):
         """
@@ -37,6 +37,7 @@ class ToolTipPanel(TextPanel):
 
         # Default tooltips
         self._tooltips = [
+            "LMB to place a flag",
             "Press 'N' to generate a new map",
             "Press 'S' to switch between original and small map views",
             "Press 'H' to toggle this help panel",
