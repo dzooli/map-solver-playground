@@ -3,11 +3,11 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
-import importlib.resources
 from typing import Dict, Any
 
 import pygame
 
+from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
 from map_solver_playground.maps.generators import MapGeneratorFactory
 from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
@@ -22,28 +22,6 @@ logger.addHandler(handler)
 
 MAP_SIZE = 600
 BLOCKS = 10
-
-
-def load_image_with_transparency(image_name: str, target_size: tuple[int, int] = None) -> pygame.Surface:
-    """
-    Load a PNG image from assets package and create a pygame surface with transparency.
-
-    Args:
-        image_name: Name of the image file (including .png extension)
-        target_size: Optional tuple of (width, height) to resize the image
-
-    Returns:
-        pygame.Surface with transparency enabled
-    """
-    with importlib.resources.path("map_solver_playground.assets", image_name) as path:
-        image = pygame.image.load(str(path))
-        if target_size:
-            image = pygame.transform.scale(image, target_size)
-        # Get color of top-left pixel
-        transparent_color = image.get_at((0, 0))
-        # Set that color as transparent
-        image.set_colorkey(transparent_color)
-        return image
 
 
 class MapSolverApp:
@@ -100,21 +78,16 @@ class MapSolverApp:
                 sprite_name, target_size=(30, 30)
             )
 
+        # Set flag images in map view
+        self.map_view.set_flag_images(self.resources["img_redflag001"], self.resources["img_greenflag001"])
+
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None):
         """Create new maps using the map view component"""
         self.map_view.create_maps(self.colormap if colors is None else colors)
 
     def handle_events(self) -> dict[int, int]:
-        """Handle pygame events and track event occurrences.
-
-        Processes pygame events like window close (QUIT) and keyboard input (KEYDOWN).
-        Keeps track of the number of occurrences for each event type.
-
-        Returns:
-            dict[int, int]: Dictionary mapping event types to their occurrence counts.
-            Empty if no events occurred.
-        """
+        """Handle pygame events and track event occurrences."""
         events = {}
         for event in pygame.event.get():
             events.update({event.type: events.get(event.type, 0) + 1})
@@ -144,6 +117,11 @@ class MapSolverApp:
         if self.map_view.current_view == 1:
             self.map_view.switch_view()
         self.create_maps(None)  # Use the current colormap from MapView
+        # Reset flags and click counter when a new map is generated
+        self.red_flag_pos = None
+        self.green_flag_pos = None
+        self.map_view.set_flag_positions(None, None)
+        self.click_count = 0
         self.status_bar.set_text("New map created")
 
     def _handle_view_switch(self):
@@ -166,38 +144,24 @@ class MapSolverApp:
         if self.map_view.current_view != 0:
             return
 
-        # Check if click is within map boundaries
-        map_x, map_y = self.map_view.image_x, self.map_view.image_y
-        map_width, map_height = self.map_view.image.get_width(), self.map_view.image.get_height()
+        # Get flag sprite dimensions (both flags have the same dimensions)
+        flag = self.resources["img_redflag001"]
 
-        # Get flag sprite dimensions
-        flag_width = self.resources["img_redflag001"].get_width()
-        flag_height = self.resources["img_redflag001"].get_height()
+        # Check if click is within safe area of the map
+        is_within_safe_area, is_within_map, rel_x, rel_y = self.map_view.is_within_safe_area(
+            pos, flag.get_width(), flag.get_height()
+        )
 
-        # Calculate the safe area where flags can be placed without exceeding map boundaries
-        # The flag is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
-        safe_x_min = map_x + flag_width // 2
-        safe_x_max = map_x + map_width - flag_width // 2
-        safe_y_min = map_y + flag_height // 2
-        safe_y_max = map_y + map_height - flag_height // 2
-
-        if safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max:
-
-            # Calculate coordinates relative to map's upper left corner
-            rel_x = pos[0] - map_x
-            rel_y = pos[1] - map_y
-
-            # Update click count and handle flag placement
-            if self.click_count == 0:
-                # First click - place red flag
+        if is_within_safe_area:
+            # Update click count and handle flag placement based on click_count modulo 2
+            if self.click_count % 2 == 0:
+                # First click (or third, fifth, etc.) - place red flag
                 self.red_flag_pos = (rel_x, rel_y)
                 self.green_flag_pos = None
-                self.click_count = 1
                 self.status_bar.set_text(f"Red flag placed at ({rel_x}, {rel_y})")
-            elif self.click_count == 1:
-                # Second click - place green flag
+            else:  # self.click_count % 2 == 1
+                # Second click (or fourth, sixth, etc.) - place green flag
                 self.green_flag_pos = (rel_x, rel_y)
-                self.click_count = 2
                 self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
 
                 # Log both coordinates
@@ -206,22 +170,23 @@ class MapSolverApp:
 
                     # Calculate coordinates on the smaller map
                     block_size = MAP_SIZE // BLOCKS
-                    red_small_x = self.red_flag_pos[0] // block_size
-                    red_small_y = self.red_flag_pos[1] // block_size
-                    green_small_x = self.green_flag_pos[0] // block_size
-                    green_small_y = self.green_flag_pos[1] // block_size
+                    small_coords = {
+                        "red_x": self.red_flag_pos[0] // block_size,
+                        "red_y": self.red_flag_pos[1] // block_size,
+                        "green_x": self.green_flag_pos[0] // block_size,
+                        "green_y": self.green_flag_pos[1] // block_size,
+                    }
 
                     # Log coordinates on the smaller map
                     self._logger.info(
-                        f"Small map - Red flag: ({red_small_x}, {red_small_y}), Green flag: ({green_small_x}, {green_small_y})"
+                        f"Small map - Red flag: ({small_coords['red_x']}, {small_coords['red_y']}), "
+                        f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
                     )
-            else:
-                # Third click - reset and place red flag
-                self.red_flag_pos = (rel_x, rel_y)
-                self.green_flag_pos = None
-                self.click_count = 1
-                self.status_bar.set_text(f"Flags reset. Red flag placed at ({rel_x}, {rel_y})")
-        elif map_x <= pos[0] <= map_x + map_width and map_y <= pos[1] <= map_y + map_height:
+
+            # Update flag positions in map view
+            self.map_view.set_flag_positions(self.red_flag_pos, self.green_flag_pos)
+            self.click_count += 1
+        elif is_within_map:
             # Click is within map but too close to the edge for flag placement
             self.status_bar.set_text("Cannot place flag: too close to map edge")
 
@@ -230,10 +195,6 @@ class MapSolverApp:
         map_info = self.map_view.get_map_info()
         self.info_panel.set_text(map_info)
 
-    def update(self):
-        """Update game state"""
-        self._update_info_panel()
-
     def draw(self):
         """Draw everything to the screen"""
         self.screen.fill(pygame.color.THECOLORS["gray"])
@@ -241,45 +202,19 @@ class MapSolverApp:
         for widget in self.widgets:
             widget.draw()
 
-        # Draw flags if in high resolution view
-        if self.map_view.current_view == 0:
-            # Draw red flag if position is set
-            if self.red_flag_pos:
-                # Calculate screen position from relative map position
-                screen_x = (
-                    self.map_view.image_x + self.red_flag_pos[0] - self.resources["img_redflag001"].get_width() // 2
-                )
-                screen_y = (
-                    self.map_view.image_y + self.red_flag_pos[1] - self.resources["img_redflag001"].get_height() // 2
-                )
-                self.screen.blit(self.resources["img_redflag001"], (screen_x, screen_y))
-
-            # Draw green flag if position is set
-            if self.green_flag_pos:
-                # Calculate screen position from relative map position
-                screen_x = (
-                    self.map_view.image_x + self.green_flag_pos[0] - self.resources["img_greenflag001"].get_width() // 2
-                )
-                screen_y = (
-                    self.map_view.image_y
-                    + self.green_flag_pos[1]
-                    - self.resources["img_greenflag001"].get_height() // 2
-                )
-                self.screen.blit(self.resources["img_greenflag001"], (screen_x, screen_y))
-
         pygame.display.flip()
 
     def run(self):
         """Main game loop"""
         clock = pygame.time.Clock()
 
-        self.update()
+        # Initial update of info panel
+        self._update_info_panel()
         self.draw()
 
         while self.running:
-            events_arrived = len(self.handle_events().items()) > 0
-            if events_arrived:
-                self.update()
+            if len(self.handle_events().items()) > 0:
+                self._update_info_panel()
                 self.draw()
             clock.tick(60)  # 60 FPS
 
