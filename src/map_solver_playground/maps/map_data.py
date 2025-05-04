@@ -110,3 +110,23 @@ class Map:
     def __repr__(self) -> str:
         """Return a string representation of the map."""
         return self.__str__()
+
+    def validate_location(self, x: int, y: int) -> None:
+        """
+        Validates the provided location coordinates against the dimensions of the map data.
+        Raises a ValueError if the coordinates exceed the bounds of the map dimensions.
+
+        :param x: The x-coordinate to validate.
+        :type x: int
+        :param y: The y-coordinate to validate.
+        :type y: int
+        :raise ValueError: If the coordinates are out of bounds of the map dimensions.
+        """
+        if x < 0 or y < 0:
+            raise ValueError(f"Location coordinates ({x}, {y}) must be non-negative")
+
+        if x >= self.data.shape[1] or y >= self.data.shape[0]:
+            raise ValueError(
+                f"Location coordinates ({x}, {y}) must be within map dimensions "
+                f"(width: {self.data.shape[1]}, height: {self.data.shape[0]})"
+            )
