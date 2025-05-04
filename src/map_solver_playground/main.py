@@ -3,6 +3,9 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
+import importlib.resources
+from idlelib.debugger_r import DictProxy
+from typing import Dict, Any
 
 import pygame
 
@@ -20,6 +23,28 @@ logger.addHandler(handler)
 
 MAP_SIZE = 600
 BLOCKS = 10
+
+
+def load_image_with_transparency(image_name: str, target_size: tuple[int, int] = None) -> pygame.Surface:
+    """
+    Load a PNG image from assets package and create a pygame surface with transparency.
+
+    Args:
+        image_name: Name of the image file (including .png extension)
+        target_size: Optional tuple of (width, height) to resize the image
+
+    Returns:
+        pygame.Surface with transparency enabled
+    """
+    with importlib.resources.path("map_solver_playground.assets", image_name) as path:
+        image = pygame.image.load(str(path))
+        if target_size:
+            image = pygame.transform.scale(image, target_size)
+        # Get color of top-left pixel
+        transparent_color = image.get_at((0, 0))
+        # Set that color as transparent
+        image.set_colorkey(transparent_color)
+        return image
 
 
 class MapSolverApp:
@@ -57,8 +82,19 @@ class MapSolverApp:
         # Widgets all in one
         self.widgets = [self.map_view, self.status_bar, self.info_panel, self.tooltip_panel]
 
+        self.resources: Dict[str, Any] = {}
+        self.load_resources()
+
         # Main loop control
         self.running = True
+
+    @measure_time(logger_instance=logger)
+    def load_resources(self) -> Dict[str, Any]:
+        """Load resources like images and sounds"""
+        for sprite_name in ["redflag001.png", "greenflag001.png"]:
+            self.resources[f"img_{sprite_name.split('.')[0]}"] = load_image_with_transparency(
+                sprite_name, target_size=(30, 30)
+            )
 
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None):
