@@ -40,8 +40,10 @@ class MapView:
         self.colormap = colormap if colormap else ColorGradient.UNDEFINED
 
         # Map data and images
-        self.map_generator = self.map_grayscale = self.map_image = None
-        self.small_map_generator = self.small_map_grayscale = self.small_map_colored = self.small_map_image = None
+        self.map_generator: MapGenerator | None = None
+        self.map_grayscale = self.map_image = None
+        self.small_map_generator: MapGenerator | None = None
+        self.small_map_grayscale = self.small_map_colored = self.small_map_image = None
 
         # Current view state
         self.current_view = 0  # 0 = original map, 1 = small map
@@ -165,7 +167,9 @@ class MapView:
         is_within_safe_area = safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max
 
         # Check if position is within map boundaries
-        is_within_map = self.image_x <= pos[0] <= self.image_x + map_width and self.image_y <= pos[1] <= self.image_y + map_height
+        is_within_map = (
+            self.image_x <= pos[0] <= self.image_x + map_width and self.image_y <= pos[1] <= self.image_y + map_height
+        )
 
         # Calculate coordinates relative to map's upper left corner
         rel_x = pos[0] - self.image_x
