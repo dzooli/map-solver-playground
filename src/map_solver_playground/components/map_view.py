@@ -2,11 +2,13 @@
 MapView component for displaying and managing map visualization in the application.
 """
 
+from typing import List, Tuple, Optional
+
 import pygame
 
 from map_solver_playground.maps.generators import MapGenerator
 from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
-from map_solver_playground.maps.visualization.color_maps import ColorGradient
+from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.maps.visualization.pygame_renderer import MapRenderer
 
 MAP_SIZE = 500
@@ -18,7 +20,15 @@ class MapView:
     A UI component that handles the visualization and management of maps.
     """
 
-    def __init__(self, screen, width, height, map_size=MAP_SIZE, block_size=30, colormap=None):
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        width: int,
+        height: int,
+        map_size: int = MAP_SIZE,
+        block_size: int = 30,
+        colormap: Optional[TerrainColorGradient] = None,
+    ) -> None:
         """
         Initialize the map view component.
 
@@ -30,31 +40,42 @@ class MapView:
             block_size: The size of blocks for the small map
             colormap: The color gradient to use for map visualization
         """
-        self.screen = screen
-        self.width = width
-        self.height = height
+        self.screen: pygame.Surface = screen
+        self.width: int = width
+        self.height: int = height
 
         # Map properties
-        self.map_width = self.map_height = map_size
-        self.block_size = block_size
-        self.colormap = colormap if colormap else ColorGradient.UNDEFINED
+        self.map_width: int = map_size
+        self.map_height: int = map_size
+        self.block_size: int = block_size
+        self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
 
         # Map data and images
-        self.map_generator: MapGenerator | None = None
-        self.map_grayscale = self.map_image = None
-        self.small_map_generator: MapGenerator | None = None
-        self.small_map_grayscale = self.small_map_colored = self.small_map_image = None
+        self.map_generator: Optional[MapGenerator] = None
+        self.map_grayscale: Optional[pygame.Surface] = None
+        self.map_image: Optional[pygame.Surface] = None
+        self.small_map_generator: Optional[MapGenerator] = None
+        self.small_map_grayscale: Optional[pygame.Surface] = None
+        self.small_map_colored: Optional[pygame.Surface] = None
+        self.small_map_image: Optional[pygame.Surface] = None
 
         # Current view state
-        self.current_view = 0  # 0 = original map, 1 = small map
-        self.image_x = self.image_y = 0
-        self.image = None
+        self.current_view: int = 0  # 0 = original map, 1 = small map
+        self.image_x: int = 0
+        self.image_y: int = 0
+        self.image: Optional[pygame.Surface] = None
 
         # Flag positions and resources
-        self.red_flag_pos = None
-        self.green_flag_pos = None
-        self.red_flag_img = None
-        self.green_flag_img = None
+        self.red_flag_pos: Optional[Tuple[int, int]] = None
+        self.green_flag_pos: Optional[Tuple[int, int]] = None
+        self.red_flag_img: Optional[pygame.Surface] = None
+        self.green_flag_img: Optional[pygame.Surface] = None
+
+        # Path rendering
+        self.path: Optional[List[Tuple[int, int]]] = None
+        self.path_color: Optional[Tuple[int, int, int]] = None
+        self.path_visible: bool = True
+        self.original_image: Optional[pygame.Surface] = None
 
         # Create initial maps
         self.create_maps(self.colormap)
@@ -62,9 +83,9 @@ class MapView:
 
     def create_maps(
         self,
-        colors,
-        generator: MapGenerator = None,
-    ):
+        colors: TerrainColorGradient,
+        generator: Optional[MapGenerator] = None,
+    ) -> None:
         """
         Create and render maps with the specified color gradient.
 
@@ -98,7 +119,7 @@ class MapView:
         self.small_map_image = MapRenderer.scale(self.small_map_colored, self.map_width, self.map_height)
         self.image = self.map_image
 
-    def switch_view(self):
+    def switch_view(self) -> str:
         """
         Switch between original and small map views.
 
@@ -112,17 +133,22 @@ class MapView:
         else:
             self.image = self.small_map_image
             message = "Showing small map"
+
+        # If we have an original image, update it for the new view
+        if self.path and self.path_visible and self.image:
+            self.original_image = self.image.copy()
+
         self._center_image()
         return message
 
-    def _center_image(self):
+    def _center_image(self) -> None:
         """
         Center the current image on the screen.
         """
         self.image_x = self.width // 2 - self.image.get_width() // 2
         self.image_y = self.height // 2 - self.image.get_height() // 2
 
-    def get_map_info(self):
+    def get_map_info(self) -> str:
         """
         Get information about the current map view.
 
@@ -136,7 +162,9 @@ class MapView:
             small_height = self.map_height // self.block_size
             return f"Small Map ({small_width}x{small_height}, block size: {self.block_size}) scaled to {self.map_width}x{self.map_height} with color mapping"
 
-    def is_within_safe_area(self, pos, sprite_width, sprite_height):
+    def is_within_safe_area(
+        self, pos: Tuple[int, int], sprite_width: int, sprite_height: int
+    ) -> Tuple[bool, bool, int, int]:
         """
         Check if the given position is within the safe area of the map.
         The safe area is defined as the area where a sprite can be placed without exceeding map boundaries.
@@ -153,7 +181,7 @@ class MapView:
                 rel_x: The x-coordinate relative to the map's upper left corner
                 rel_y: The y-coordinate relative to the map's upper left corner
         """
-        # Check if click is within map boundaries
+        # Check if the click is within map boundaries
         map_width, map_height = self.image.get_width(), self.image.get_height()
 
         # Calculate the safe area where sprites can be placed without exceeding map boundaries
@@ -166,7 +194,7 @@ class MapView:
         # Check if position is within safe area
         is_within_safe_area = safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max
 
-        # Check if position is within map boundaries
+        # Check if the position is within map boundaries
         is_within_map = (
             self.image_x <= pos[0] <= self.image_x + map_width and self.image_y <= pos[1] <= self.image_y + map_height
         )
@@ -177,7 +205,9 @@ class MapView:
 
         return is_within_safe_area, is_within_map, rel_x, rel_y
 
-    def screen_to_map_pos(self, rel_pos, sprite_width, sprite_height):
+    def screen_to_map_pos(
+        self, rel_pos: Optional[Tuple[int, int]], sprite_width: int, sprite_height: int
+    ) -> Optional[Tuple[int, int]]:
         """
         Convert relative map position to screen position for sprite placement.
 
@@ -196,7 +226,7 @@ class MapView:
         screen_y = self.image_y + rel_pos[1] - sprite_height // 2
         return screen_x, screen_y
 
-    def set_flag_images(self, red_flag_img, green_flag_img):
+    def set_flag_images(self, red_flag_img: pygame.Surface, green_flag_img: pygame.Surface) -> None:
         """
         Set the flag images to be used for drawing.
 
@@ -207,7 +237,9 @@ class MapView:
         self.red_flag_img = red_flag_img
         self.green_flag_img = green_flag_img
 
-    def set_flag_positions(self, red_flag_pos, green_flag_pos):
+    def set_flag_positions(
+        self, red_flag_pos: Optional[Tuple[int, int]], green_flag_pos: Optional[Tuple[int, int]]
+    ) -> None:
         """
         Set the positions of the flags.
 
@@ -218,7 +250,51 @@ class MapView:
         self.red_flag_pos = red_flag_pos
         self.green_flag_pos = green_flag_pos
 
-    def draw(self):
+    def render_path(self, path: List[Tuple[int, int]], color: Tuple[int, int, int]) -> None:
+        """
+        Render a path on the map.
+
+        Args:
+            path: A list of (x, y) tuples representing points on the path
+            color: The color to use for rendering the path
+        """
+        # Store a backup of the original image
+        if self.image:
+            self.original_image = self.image.copy()
+
+        self.path = path
+        self.path_color = color
+        self.path_visible = True
+
+    def hide_path(self) -> bool:
+        """
+        Toggle the visibility of the path.
+
+        Returns:
+            bool: The new visibility state of the path
+        """
+        self.path_visible = not self.path_visible
+
+        # If the path is being hidden, restore the original image
+        if not self.path_visible and self.original_image:
+            if self.current_view == 0:
+                self.map_image = self.original_image.copy()
+                self.image = self.map_image
+            else:
+                self.small_map_image = self.original_image.copy()
+                self.image = self.small_map_image
+
+        return self.path_visible
+
+    def clear_path(self) -> None:
+        """
+        Clear the path data.
+        """
+        self.path = None
+        self.path_visible = True
+        self.original_image = None
+
+    def draw(self) -> None:
         """
         Draw the map view on the screen.
         """
@@ -237,6 +313,24 @@ class MapView:
             ),
             1,
         )
+
+        # Draw path if it exists and is visible
+        if self.path and self.path_visible and len(self.path) > 1:
+            # Convert path coordinates to screen coordinates
+            screen_points = []
+            for point in self.path:
+                screen_x = self.image_x + point[0]
+                screen_y = self.image_y + point[1]
+                screen_points.append((screen_x, screen_y))
+
+            # Draw the path as connected lines
+            pygame.draw.lines(
+                self.screen,
+                self.path_color,
+                False,  # Don't connect the last point to the first
+                screen_points,
+                2,  # Line width
+            )
 
         # Draw flags if in high resolution view and flag images are set
         if self.current_view == 0 and self.red_flag_img and self.green_flag_img:
