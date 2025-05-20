@@ -9,9 +9,9 @@ class TestToolTipPanel:
 
     def test_initialization(self, tooltip_panel):
         assert tooltip_panel.visible is True
-        assert len(tooltip_panel.tooltips) == 4
-        assert tooltip_panel.position == (10, 750)
-        assert tooltip_panel.size == (880, 100)
+        assert len(tooltip_panel.tooltips) == 7
+        assert tooltip_panel.position == (10, 710)
+        assert tooltip_panel.size == (880, 155)
 
     def test_set_tooltips(self, tooltip_panel):
         new_tooltips = ["Tip 1", "Tip 2"]
