@@ -8,6 +8,7 @@ import importlib
 import inspect
 
 from map_solver_playground.maps.solvers.map_solver import MapSolver
+from map_solver_playground.maps.solvers.flow_field_solver import FlowFieldSolver
 
 
 class MapSolverFactory:
@@ -40,4 +41,4 @@ class MapSolverFactory:
             raise ValueError(f"Could not create solver {solver_name}: {str(e)}")
 
 
-__all__ = ["MapSolver", "MapSolverFactory"]
+__all__ = ["MapSolver", "MapSolverFactory", "FlowFieldSolver"]
