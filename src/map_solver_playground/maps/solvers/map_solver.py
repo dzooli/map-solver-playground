@@ -4,19 +4,23 @@ Map solver module.
 This module provides the MapSolver class for solving map-related problems.
 """
 
-from typing import Tuple, Optional, Union
+from abc import ABC, abstractmethod
+from typing import Tuple, Optional, Union, List, override
+import numpy as np
 
 from map_solver_playground.maps.map_data import Map
 from map_solver_playground.maps.types import MapLocation
 
 
-class MapSolver:
+class MapSolver(ABC):
     """
-    A class to solve map-related problems.
+    An abstract class to solve map-related problems.
 
     This class is initialized with a Map object and automatically retrieves
     the small map. It also stores two location coordinates that can be used
     for pathfinding or other location-based operations.
+
+    Subclasses must implement the solve method.
     """
 
     model_config = {
@@ -49,7 +53,6 @@ class MapSolver:
             self.set_start_location(start_location)
         if end_location is not None:
             self.set_end_location(end_location)
-
 
     @property
     def start_location(self) -> Optional[Tuple[int, int]]:
@@ -90,11 +93,11 @@ class MapSolver:
     def set_end_location(self, location: Union[Tuple[int, int], MapLocation]) -> None:
         """
         Sets the end location of an entity within a map. The method ensures the location
-        is valid and, if the input is a tuple, converts it to a `MapLocation` instance 
-        before assigning it to the internal `_end_location` attribute. This ensures 
+        is valid and, if the input is a tuple, converts it to a `MapLocation` instance
+        before assigning it to the internal `_end_location` attribute. This ensures
         consistency regardless of input type.
 
-        :param location: The target end location. It can either be a tuple containing 
+        :param location: The target end location. It can either be a tuple containing
                          the x and y coordinates or a `MapLocation` instance.
         :type location: Union[Tuple[int, int], MapLocation]
         """
@@ -115,3 +118,18 @@ class MapSolver:
     def __repr__(self) -> str:
         """Return a string representation of the MapSolver."""
         return self.__str__()
+
+    @abstractmethod
+    def solve(self) -> List[Tuple[int, int]]:
+        """
+        Solve the path finding problem on the given map.
+
+        Args:
+            map_array (np.ndarray): The map as a numpy array
+            start (Tuple[int, int]): The starting coordinates (x, y)
+            goal (Tuple[int, int]): The goal coordinates (x, y)
+
+        Returns:
+            List[Tuple[int, int]]: A list of coordinates representing the path from start to goal
+        """
+        pass
