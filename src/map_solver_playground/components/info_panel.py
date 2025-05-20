@@ -10,7 +10,7 @@ class InfoPanel(TextPanel):
     A UI component that displays information about the current map view.
     """
 
-    def __init__(self, screen, width, height, font, position=(10, 10), size=(650, 30), color=None):
+    def __init__(self, screen, width, height, font, position=(10, 10), size=(880, 30), color=None):
         """
         Initialize the info panel component.
 
