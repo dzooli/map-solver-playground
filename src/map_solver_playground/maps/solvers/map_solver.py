@@ -5,7 +5,7 @@ This module provides the MapSolver class for solving map-related problems.
 """
 
 from abc import ABC, abstractmethod
-from typing import Tuple, Optional, Union, List, override
+from typing import Tuple, Optional, Union, List
 import numpy as np
 
 from map_solver_playground.maps.map_data import Map
@@ -32,17 +32,21 @@ class MapSolver(ABC):
         map_obj: Map,
         start_location: Optional[Union[Tuple[int, int], MapLocation]] = None,
         end_location: Optional[Union[Tuple[int, int], MapLocation]] = None,
+        small_solver: bool = False,
     ):
         """
-        Initialize a new MapSolver with the specified map and locations.
+        Initialize a new MapSolver with the specified map and locations. If small_solver is True,
+        the solver will use the smaller map for pathfinding and other operations.
 
         Args:
             map_obj (Map): The map object to solve
             start_location (Optional[Union[Tuple[int, int], MapLocation]]): The starting location coordinates
             end_location (Optional[Union[Tuple[int, int], MapLocation]]): The ending location coordinates
+            small_solver (bool): Whether to use the small map for pathfinding. Defaults to False.
         """
         self.map = map_obj
         self.small_map = self.map.submap  # Automatically retrieve the small map
+        self._small_solver = small_solver
 
         # Initialize locations
         self._start_location = None
@@ -53,6 +57,10 @@ class MapSolver(ABC):
             self.set_start_location(start_location)
         if end_location is not None:
             self.set_end_location(end_location)
+
+    @property
+    def is_small_solver(self):
+        return self._small_solver
 
     @property
     def start_location(self) -> Optional[Tuple[int, int]]:
@@ -81,13 +89,15 @@ class MapSolver(ABC):
         :return: None
         """
         # Convert tuple to MapLocation if needed
+        location_validator = self.map if not self._small_solver else self.small_map
         if isinstance(location, tuple):
             x, y = location
-            # self.small_map.validate_location(x, y)
+            location_validator.validate_location(x, y)
             self._start_location = MapLocation(x=x, y=y)
         else:
             # It's already a MapLocation
-            # self.small_map.validate_location(location.x, location.y)
+            location_validator.validate_location(location.x, location.y)
+            self.small_map.validate_location(location.x, location.y)
             self._start_location = location
 
     def set_end_location(self, location: Union[Tuple[int, int], MapLocation]) -> None:
@@ -102,13 +112,15 @@ class MapSolver(ABC):
         :type location: Union[Tuple[int, int], MapLocation]
         """
         # Convert tuple to MapLocation if needed
+        location_validator = self.map if not self._small_solver else self.small_map
         if isinstance(location, tuple):
             x, y = location
-            # self.small_map.validate_location(x, y)
+            location_validator.validate_location(x, y)
             self._end_location = MapLocation(x=x, y=y)
         else:
             # It's already a MapLocation
-            # self.small_map.validate_location(location.x, location.y)
+            location_validator.validate_location(location.x, location.y)
+            self.small_map.validate_location(location.x, location.y)
             self._end_location = location
 
     def __str__(self) -> str:
@@ -130,6 +142,8 @@ class MapSolver(ABC):
             goal (Tuple[int, int]): The goal coordinates (x, y)
 
         Returns:
-            List[Tuple[int, int]]: A list of coordinates representing the path from start to goal
+            List[Tuple[int, int]]: A list of coordinates representing the path from start to goal on the original map.
+                                    So if is_small_solver is True, the method must return the coordinates upscaled to the
+                                    original map dimensions. For upscaling get the block size from the map object.
         """
         pass

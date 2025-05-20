@@ -17,7 +17,7 @@ class Map:
     for manipulating and accessing the map data.
     """
 
-    def __init__(self, width: int, height: int, data: Union[List[List[float]]] | np.ndarray = None):
+    def __init__(self, width: int, height: int, data: Union[List[List[float]]] | np.ndarray = None, block_size: int = 10):
         """
         Initialize a new map with the specified dimensions.
 
@@ -27,10 +27,13 @@ class Map:
             data (Optional[Union[List[List[float]], np.ndarray]]): Initial map data, if provided.
                 If a numpy array is provided, it will be used directly without copying.
                 This means changes to the Map will affect the original array.
+            block_size (Optional[int]): The size of each block to average upon small map generation. Defaults to 10.
         """
         self.width: int = width
         self.height: int = height
-        self.small_map = None
+        self.small_map : Map | None = None
+
+        self._block_size = block_size
 
         if data is not None:
             # Convert list to numpy array if needed
@@ -51,16 +54,31 @@ class Map:
             # Initialize with zeros
             self.data = np.zeros((height, width), dtype=np.float64)
 
-    def create_submap(self, block_size: int) -> "Map":
+    @property
+    def block_size(self) -> int:
+        return self._block_size
+
+    @block_size.setter
+    def block_size(self, value: int):
+        self._validate_block_size(value)
+        self._block_size = value
+
+    def _validate_block_size(self, size: int) -> None:
+        if size > self.width or size > self.height or size < 1:
+            raise ValueError(f"Block size must be at least 1 and less than map dimensions ({self.width}x{self.height}).")
+
+    def create_submap(self, block_size: int = 10) -> "Map":
         """
         Create a smaller version of the map by averaging blocks of cells.
 
         Args:
-            block_size (int): The size of each block to average
+            block_size (int): The size of each block to average. Defaults to 10.
 
         Returns:
             Map: A new Map instance with the smaller map
         """
+        self._validate_block_size(block_size)
+
         # Calculate the dimensions of the smaller map
         small_width = self.width // block_size
         small_height = self.height // block_size

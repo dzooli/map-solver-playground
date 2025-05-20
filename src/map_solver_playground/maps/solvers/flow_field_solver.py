@@ -37,11 +37,11 @@ class FlowFieldSolver(MapSolver):
     def energy_cost(self, from_h, to_h):
         delta = to_h - from_h
         if delta > 0:
-            return delta * 2 + 1  # up
+            return delta * 2 + 1  # emelkedő: merülés
         elif delta < 0:
-            return max(-1, delta)  # down
+            return -delta + 1  # lejtő: visszatöltés
         else:
-            return 1  # energy loss 1
+            return 1  # síkon: merülés
 
     def _generate_flow_field_np(self) -> Tuple[np.ndarray, np.ndarray]:
         rows, cols = self.map.data.shape
