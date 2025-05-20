@@ -14,6 +14,7 @@ terrain maps, applying filters, and visualizing the results using Pygame.
 - Performance metrics for measuring execution time
 - Place flags on the map to mark locations
 - Map solver for location-based operations
+    - Example solver with Flow-field algorithm
 - Switch between original and small map views
 
 ## Installation
@@ -23,8 +24,8 @@ terrain maps, applying filters, and visualizing the results using Pygame.
 git clone https://github.com/yourusername/map-solver-playground.git
 cd map-solver-playground
 
-# Install the package
-pip install -e .
+# Install the package using uv (pip is deprecated)
+uv pip install -e .
 ```
 
 ## Usage
@@ -38,16 +39,20 @@ python -m map_solver_playground
 ### Controls
 
 #### Keyboard
+
 - `ESC`: Exit the application
 - `N`: Generate a new map
-- `S`: Switch between original and small map views
-- `H`: Toggle tooltip visibility
+- `S`: Solve a path between placed flags
+- `V`: Switch between original and small map views
+- `H`: Toggle path visibility
+- `T`: Toggle tooltip visibility
 
 #### Mouse
+
 - **Left Click**: Place flags on the map (alternates between red and green flags)
-  - First click places a red flag (start location)
-  - Second click places a green flag (end location)
-  - Subsequent clicks repeat this pattern
+    - First click places a red flag (start location)
+    - Second click places a green flag (end location)
+    - Subsequent clicks repeat this pattern
 
 ## Project Structure
 
