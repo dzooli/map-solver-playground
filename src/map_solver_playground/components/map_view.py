@@ -162,6 +162,18 @@ class MapView:
             small_height = self.map_height // self.block_size
             return f"Small Map ({small_width}x{small_height}, block size: {self.block_size}) scaled to {self.map_width}x{self.map_height} with color mapping"
 
+    @property
+    def map(self):
+        """
+        Get the map object from the map generator.
+
+        Returns:
+            Map: The map object
+        """
+        if self.map_generator:
+            return self.map_generator.map
+        return None
+
     def is_within_safe_area(
         self, pos: Tuple[int, int], sprite_width: int, sprite_height: int
     ) -> Tuple[bool, bool, int, int]:
@@ -250,7 +262,7 @@ class MapView:
         self.red_flag_pos = red_flag_pos
         self.green_flag_pos = green_flag_pos
 
-    def render_path(self, path: List[Tuple[int, int]], color: Tuple[int, int, int]) -> None:
+    def render_path(self, path: List[Tuple[int, int]], color: Tuple[int, int, int, int]) -> None:
         """
         Render a path on the map.
 

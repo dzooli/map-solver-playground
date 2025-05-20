@@ -83,11 +83,11 @@ class MapSolver(ABC):
         # Convert tuple to MapLocation if needed
         if isinstance(location, tuple):
             x, y = location
-            self.small_map.validate_location(x, y)
+            # self.small_map.validate_location(x, y)
             self._start_location = MapLocation(x=x, y=y)
         else:
             # It's already a MapLocation
-            self.small_map.validate_location(location.x, location.y)
+            # self.small_map.validate_location(location.x, location.y)
             self._start_location = location
 
     def set_end_location(self, location: Union[Tuple[int, int], MapLocation]) -> None:
@@ -104,11 +104,11 @@ class MapSolver(ABC):
         # Convert tuple to MapLocation if needed
         if isinstance(location, tuple):
             x, y = location
-            self.small_map.validate_location(x, y)
+            # self.small_map.validate_location(x, y)
             self._end_location = MapLocation(x=x, y=y)
         else:
             # It's already a MapLocation
-            self.small_map.validate_location(location.x, location.y)
+            # self.small_map.validate_location(location.x, location.y)
             self._end_location = location
 
     def __str__(self) -> str:

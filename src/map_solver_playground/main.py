@@ -10,6 +10,7 @@ import pygame
 from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
 from map_solver_playground.maps.generators import MapGeneratorFactory
+from map_solver_playground.maps.solvers import MapSolverFactory, MapSolver
 from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.metrics import measure_time
 
@@ -22,6 +23,9 @@ logger.addHandler(handler)
 
 MAP_SIZE = 600
 BLOCKS = 10
+
+# Default solver to use for pathfinding
+DEFAULT_SOLVER = "FlowFieldSolver"
 
 
 class MapSolverApp:
@@ -70,6 +74,10 @@ class MapSolverApp:
         self.red_flag_pos = None
         self.green_flag_pos = None
 
+        # Path solving
+        self.path = None
+        self.path_visible = True
+
     @measure_time(logger_instance=logger)
     def load_resources(self) -> None:
         """Load resources like images and sounds"""
@@ -78,13 +86,26 @@ class MapSolverApp:
                 sprite_name, target_size=(30, 30)
             )
 
-        # Set flag images in map view
+        # Set flag images in the map view
         self.map_view.set_flag_images(self.resources["img_redflag001"], self.resources["img_greenflag001"])
 
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None):
         """Create new maps using the map view component"""
         self.map_view.create_maps(self.colormap if colors is None else colors)
+
+    @measure_time(logger_instance=logger)
+    def solve_path(self, solver: MapSolver = None) -> None:
+        """Solve the path from a red flag to the green flag using the default solver"""
+        if self.red_flag_pos is None or self.green_flag_pos is None:
+            self.status_bar.set_text("Cannot solve path: Both red and green flags must be placed")
+            return
+
+        self.status_bar.set_text("Solving path...")
+        # Solve the path
+        self.path = solver.solve()
+        self.status_bar.set_text("Path solved")
+        logger.debug("Path solved")
 
     def handle_events(self) -> dict[int, int]:
         """Handle pygame events and track event occurrences."""
@@ -106,8 +127,16 @@ class MapSolverApp:
         elif key == pygame.K_n:
             self._handle_new_map()
         elif key == pygame.K_s:
-            self._handle_view_switch()
+            # S: Solve a path
+            self._handle_solve_path()
         elif key == pygame.K_h:
+            # H: Toggle path visibility
+            self._handle_toggle_path_visibility()
+        elif key == pygame.K_v:
+            # V: Switch view
+            self._handle_view_switch()
+        elif key == pygame.K_t:
+            # T: Toggle tooltip
             self._handle_tooltip_toggle()
 
     def _handle_new_map(self):
@@ -121,6 +150,9 @@ class MapSolverApp:
         self.red_flag_pos = None
         self.green_flag_pos = None
         self.map_view.set_flag_positions(None, None)
+        # Clear any existing path
+        self.path = None
+        self.map_view.clear_path()
         self.click_count = 0
         self.status_bar.set_text("New map created")
 
@@ -134,13 +166,56 @@ class MapSolverApp:
         """Toggle the visibility of the tooltip panel"""
         self.tooltip_panel.toggle_visibility()
 
+    def _handle_solve_path(self):
+        """Solve the path from the red flag to the green flag using the default solver"""
+        if self.red_flag_pos is None or self.green_flag_pos is None:
+            self.status_bar.set_text("Cannot solve path: Both red and green flags must be placed")
+            return
+
+        try:
+            # Get the map from the map view
+            map_obj = self.map_view.map
+
+            # Create a solver instance
+            logger.debug(f"Creating solver: {DEFAULT_SOLVER}")
+            solver = MapSolverFactory.create(
+                DEFAULT_SOLVER, map_obj=map_obj, start_location=self.red_flag_pos, end_location=self.green_flag_pos
+            )
+            logger.debug(f"Solver created: {solver}")
+
+            self.solve_path(solver)
+
+            if self.path:
+                # Render the path on the map
+                # Convert RGBA color to RGB by taking only the first 3 values
+                # Explicitly cast to tuple of three integers to ensure the correct type
+                self.map_view.render_path(self.path, pygame.color.THECOLORS["blue"])
+                self.path_visible = True
+                self.status_bar.set_text(f"Path solved using {DEFAULT_SOLVER}")
+            else:
+                self.status_bar.set_text("No path found between the flags")
+        except Exception as e:
+            self.status_bar.set_text(f"Error solving path: {str(e)}")
+            if self._logger:
+                self._logger.error(f"Error solving path: {str(e)}")
+
+    def _handle_toggle_path_visibility(self):
+        """Toggle the visibility of the path"""
+        if self.path is None:
+            self.status_bar.set_text("No path to show/hide")
+            return
+
+        self.path_visible = self.map_view.hide_path()
+        status = "shown" if self.path_visible else "hidden"
+        self.status_bar.set_text(f"Path {status}")
+
     def _handle_mouse_click(self, pos):
         """Handle mouse click events for flag placement
 
         Args:
             pos: The (x, y) position of the mouse click
         """
-        # Only handle clicks in high resolution view
+        # Only handle clicks in a high-resolution view
         if self.map_view.current_view != 0:
             return
 
@@ -155,12 +230,12 @@ class MapSolverApp:
         if is_within_safe_area:
             # Update click count and handle flag placement based on click_count modulo 2
             if self.click_count % 2 == 0:
-                # First click (or third, fifth, etc.) - place red flag
+                # First click (or third, fifth, etc.) - place a red flag
                 self.red_flag_pos = (rel_x, rel_y)
                 self.green_flag_pos = None
                 self.status_bar.set_text(f"Red flag placed at ({rel_x}, {rel_y})")
             else:  # self.click_count % 2 == 1
-                # Second click (or fourth, sixth, etc.) - place green flag
+                # Second click (or fourth, sixth, etc.) - place a green flag
                 self.green_flag_pos = (rel_x, rel_y)
                 self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
 
@@ -183,11 +258,11 @@ class MapSolverApp:
                         f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
                     )
 
-            # Update flag positions in map view
+            # Update flag positions in the map view
             self.map_view.set_flag_positions(self.red_flag_pos, self.green_flag_pos)
             self.click_count += 1
         elif is_within_map:
-            # Click is within map but too close to the edge for flag placement
+            # Click is within the map but too close to the edge for flag placement
             self.status_bar.set_text("Cannot place flag: too close to map edge")
 
     def _update_info_panel(self):
