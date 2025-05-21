@@ -1,21 +1,21 @@
 """
 Pygame map renderer module.
 
-This module provides the MapRenderer class for rendering maps using pygame.
+This module provides the MapRenderer class for rendering map using pygame.
 """
 
 import numpy as np
 import pygame
 
-from map_solver_playground.maps.map_data import Map
-from map_solver_playground.maps.visualization.color_maps import TerrainColorGradient
+from map_solver_playground.map.map_data import Map
+from map_solver_playground.map.render.color_maps import TerrainColorGradient
 
 
 class MapRenderer:
     """
-    A class for rendering maps using pygame.
+    A class for rendering map using pygame.
 
-    This class provides methods for converting maps to pygame surfaces
+    This class provides methods for converting map to pygame surfaces
     and applying visual effects.
     """
 

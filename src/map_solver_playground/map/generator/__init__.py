@@ -4,9 +4,9 @@ Generators module for map data.
 This module provides algorithms for generating map data.
 """
 
-from map_solver_playground.maps.generators.base_generator import MapGenerator
-from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
-from map_solver_playground.maps.generators.recursive_diamond_square import RecursiveDiamondSquareGenerator
+from map_solver_playground.map.generator.base_generator import MapGenerator
+from map_solver_playground.map.generator.diamond_square import DiamondSquareGenerator
+from map_solver_playground.map.generator.recursive_diamond_square import RecursiveDiamondSquareGenerator
 
 
 class MapGeneratorFactory:

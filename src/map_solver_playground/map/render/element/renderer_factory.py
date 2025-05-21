@@ -1,17 +1,17 @@
 """
-Factory for creating renderers for map elements.
+Factory for creating element for map elements.
 """
 
 from typing import Dict, Type
 
-from map_solver_playground.maps.types import MapElement, Flag, GeoPath
-from map_solver_playground.maps.renderers.flag_renderer import FlagRenderer
-from map_solver_playground.maps.renderers.geo_path_renderer import GeoPathRenderer
+from map_solver_playground.map.types import MapElement, Flag, GeoPath
+from map_solver_playground.map.render.element.flag_renderer import FlagRenderer
+from map_solver_playground.map.render.element.geo_path_renderer import GeoPathRenderer
 
 
 class RendererFactory:
     """
-    Factory for creating renderers for map elements.
+    Factory for creating element for map elements.
     """
 
     # Map element types to their corresponding renderer classes

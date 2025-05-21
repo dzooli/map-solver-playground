@@ -7,8 +7,8 @@ This package contains classes for solving various map-related problems.
 import importlib
 import inspect
 
-from map_solver_playground.maps.solvers.map_solver import MapSolver
-from map_solver_playground.maps.solvers.flow_field_solver import FlowFieldSolver
+from map_solver_playground.map.solver.map_solver import MapSolver
+from map_solver_playground.map.solver.flow_field_solver import FlowFieldSolver
 
 
 class MapSolverFactory:
@@ -30,7 +30,7 @@ class MapSolverFactory:
             ValueError: If the solver class cannot be found or instantiated
         """
         try:
-            module = importlib.import_module("map_solver_playground.maps.solvers")
+            module = importlib.import_module("map_solver_playground.map.solver")
             solver_class = getattr(module, solver_name)
 
             if not inspect.isclass(solver_class) or not issubclass(solver_class, MapSolver):

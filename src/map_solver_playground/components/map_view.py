@@ -1,18 +1,18 @@
 """
-MapView component for displaying and managing map visualization in the application.
+MapView component for displaying and managing map render in the application.
 """
 
 from typing import List, Tuple, Optional, Dict
 
 import pygame
 
-from map_solver_playground.maps.types import MapElement, Flag, GeoPath
-from map_solver_playground.maps.generators import MapGenerator
-from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
-from map_solver_playground.maps.renderers import FlagRenderer, GeoPathRenderer
-from map_solver_playground.maps.renderers.renderer_factory import RendererFactory
-from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
-from map_solver_playground.maps.visualization.pygame_renderer import MapRenderer
+from map_solver_playground.map.types import MapElement, Flag, GeoPath
+from map_solver_playground.map.generator import MapGenerator
+from map_solver_playground.map.generator.diamond_square import DiamondSquareGenerator
+from map_solver_playground.map.render.element import FlagRenderer, GeoPathRenderer
+from map_solver_playground.map.render.element.renderer_factory import RendererFactory
+from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.render.pygame_renderer import MapRenderer
 
 MAP_SIZE = 500
 BLOCKS = 10
@@ -20,7 +20,7 @@ BLOCKS = 10
 
 class MapView:
     """
-    A UI component that handles the visualization and management of maps.
+    A UI component that handles the render and management of map.
     """
 
     def __init__(
@@ -41,7 +41,7 @@ class MapView:
             height: The height of the screen
             map_size: The size of the map (width and height)
             block_size: The size of blocks for the small map
-            colormap: The color gradient to use for map visualization
+            colormap: The color gradient to use for map render
         """
         self.screen: pygame.Surface = screen
         self.width: int = width
@@ -71,7 +71,7 @@ class MapView:
         # Map elements
         self.map_elements: Dict[str, MapElement] = {}
 
-        # Create initial maps
+        # Create initial map
         self.create_maps(self.colormap)
         self._center_image()
 
@@ -81,10 +81,10 @@ class MapView:
         generator: Optional[MapGenerator] = None,
     ) -> None:
         """
-        Create and render maps with the specified color gradient.
+        Create and render map with the specified color gradient.
 
         Args:
-            :param colors: The color gradient to use for map visualization
+            :param colors: The color gradient to use for map render
             :param generator: The map generator to use for map generation, defaults to DiamondSquareGenerator
         """
         if colors is None:

@@ -10,7 +10,7 @@ from typing import Tuple, List
 
 import numpy as np
 
-from map_solver_playground.maps.solvers.map_solver import MapSolver
+from map_solver_playground.map.solver.map_solver import MapSolver
 
 
 class FlowFieldSolver(MapSolver):

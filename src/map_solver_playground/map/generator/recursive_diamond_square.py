@@ -1,7 +1,7 @@
 """
 Recursive Diamond-Square map generator module.
 
-This module provides the RecursiveDiamondSquareGenerator class for generating maps
+This module provides the RecursiveDiamondSquareGenerator class for generating map
 using a recursive implementation of the Diamond-Square algorithm.
 """
 
@@ -10,9 +10,9 @@ import random
 
 import numpy as np
 
-from map_solver_playground.maps.generators.base_generator import MapGenerator, clamp_value
-from map_solver_playground.maps.helpers import calculate_random_offset
-from map_solver_playground.maps.map_data import Map
+from map_solver_playground.map.generator.base_generator import MapGenerator, clamp_value
+from map_solver_playground.map.helper import calculate_random_offset
+from map_solver_playground.map.map_data import Map
 
 
 class RecursiveDiamondSquareGenerator(MapGenerator):

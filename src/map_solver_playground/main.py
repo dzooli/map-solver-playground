@@ -9,9 +9,9 @@ import pygame
 
 from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
-from map_solver_playground.maps.generators import MapGeneratorFactory
-from map_solver_playground.maps.solvers import MapSolverFactory, MapSolver
-from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.generator import MapGeneratorFactory
+from map_solver_playground.map.solver import MapSolverFactory, MapSolver
+from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.metrics import measure_time
 
 logger: logging.Logger = logging.getLogger("mapsolver")
@@ -56,7 +56,7 @@ class MapSolverApp:
         self.map_view = MapView(self.screen, self.width, self.height, map_size, block_size, self.colormap)
 
         # Add map elements to the map view
-        from map_solver_playground.maps.types import Flag, GeoPath
+        from map_solver_playground.map.types import Flag, GeoPath
 
         self.map_view.add_element("red_flag", Flag(None, None, "red", True))
         self.map_view.add_element("green_flag", Flag(None, None, "green", True))
@@ -102,7 +102,7 @@ class MapSolverApp:
 
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None):
-        """Create new maps using the map view component"""
+        """Create new map using the map view component"""
         self.map_view.create_maps(self.colormap if colors is None else colors)
 
     @measure_time(logger_instance=logger)

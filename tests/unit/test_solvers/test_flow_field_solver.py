@@ -63,13 +63,13 @@ class TestFlowFieldSolver(unittest.TestCase):
         start = (2, 2)
         goal = (8, 8)
 
-        # Set start and end locations for both solvers
+        # Set start and end locations for both solver
         self.solver.set_start_location(start)
         self.solver.set_end_location(goal)
         self.direct_solver.set_start_location(start)
         self.direct_solver.set_end_location(goal)
 
-        # Solve using both solvers
+        # Solve using both solver
         factory_path = self.solver.solve()
         direct_path = self.direct_solver.solve()
 

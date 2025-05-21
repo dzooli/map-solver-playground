@@ -1,7 +1,7 @@
 """
-Color maps module.
+Color map module.
 
-This module provides color maps for map visualization.
+This module provides color map for map render.
 """
 
 from typing import List, Tuple

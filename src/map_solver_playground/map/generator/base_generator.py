@@ -1,16 +1,16 @@
 """
 Base map generator module.
 
-This module provides the abstract base class for map generators.
+This module provides the abstract base class for map generator.
 """
 
 from abc import ABC, abstractmethod
 import math
 import numpy as np
 
-from map_solver_playground.maps.filters import median_filter
-from map_solver_playground.maps.map_data import Map
-from map_solver_playground.maps.helpers import calculate_random_offset
+from map_solver_playground.map.filter import median_filter
+from map_solver_playground.map.map_data import Map
+from map_solver_playground.map.helper import calculate_random_offset
 
 # Constants
 CORNER_COUNT = 4
@@ -22,9 +22,9 @@ clamp_value = lambda value: np.clip(value, 0.0, 1.0)
 
 class MapGenerator(ABC):
     """
-    Abstract base class for map generators.
+    Abstract base class for map generator.
 
-    This class defines the interface for map generators and provides
+    This class defines the interface for map generator and provides
     common functionality.
     """
 

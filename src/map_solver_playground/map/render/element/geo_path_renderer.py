@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import pygame
 
-from map_solver_playground.maps.types.geo_path import GeoPath
+from map_solver_playground.map.types.geo_path import GeoPath
 
 
 class GeoPathRenderer:

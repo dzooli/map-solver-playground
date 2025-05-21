@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from map_solver_playground.maps.types.flag import Flag
+from map_solver_playground.map.types.flag import Flag
 
 
 class FlagRenderer:

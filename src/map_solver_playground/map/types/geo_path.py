@@ -4,7 +4,7 @@ GeoPath map element class.
 
 from typing import List, Optional, Tuple
 
-from map_solver_playground.maps.types.map_element import MapElement
+from map_solver_playground.map.types.map_element import MapElement
 
 
 class GeoPath(MapElement):

@@ -8,8 +8,8 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Optional, Union, List
 import numpy as np
 
-from map_solver_playground.maps.map_data import Map
-from map_solver_playground.maps.types import MapLocation
+from map_solver_playground.map.map_data import Map
+from map_solver_playground.map.types import MapLocation
 
 
 class MapSolver(ABC):

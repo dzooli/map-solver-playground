@@ -1,3 +1,3 @@
 """
-Test package for the solvers module.
+Test package for the solver module.
 """

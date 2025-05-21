@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from map_solver_playground.maps.types.map_element import MapElement
+from map_solver_playground.map.types.map_element import MapElement
 
 
 class Flag(MapElement):
