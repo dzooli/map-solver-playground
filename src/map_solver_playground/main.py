@@ -10,8 +10,8 @@ import pygame
 from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
 from map_solver_playground.map.generator import MapGeneratorFactory
-from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.profile import measure_time
 
 logger: logging.Logger = logging.getLogger("mapsolver")
