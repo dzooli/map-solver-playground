@@ -5,8 +5,8 @@ Test module for the FlowFieldSolver class.
 import unittest
 import numpy as np
 
-from map_solver_playground.maps.map_data import Map
-from map_solver_playground.maps.solvers import MapSolverFactory, FlowFieldSolver
+from map_solver_playground.map.map_data import Map
+from map_solver_playground.map.solver import MapSolverFactory, FlowFieldSolver
 
 
 class TestFlowFieldSolver(unittest.TestCase):

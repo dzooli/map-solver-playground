@@ -1,7 +1,7 @@
 import pytest
 import time
 from unittest.mock import patch
-from map_solver_playground.metrics.timing import measure_time
+from map_solver_playground.profile.timing import measure_time
 
 
 class TestMeasureTime:
