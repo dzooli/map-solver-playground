@@ -23,19 +23,17 @@ class InfoPanel(TextPanel):
             size: The size of the panel (width, height)
         """
         super().__init__(screen, width, height, font, position, size, color)
-        self.text = ""
 
     def draw(self):
         """
         Draw the info panel on the screen.
         """
-        if not self.visible:
+        if not self.visible or not self._text or not isinstance(self._text, str):
             return
 
         self._draw_background()
 
         # Draw the text
-        if self.text and isinstance(self.text, str):
-            text_surface = self.font.render(self.text, True, self.color)
-            text_rect = text_surface.get_rect(topleft=(self.position[0] + 10, self.position[1] + 10))
-            self.screen.blit(text_surface, text_rect)
+        text_surface = self.font.render(self._text, True, self.color)
+        text_rect = text_surface.get_rect(topleft=(self.position[0] + 10, self.position[1] + 10))
+        self.screen.blit(text_surface, text_rect)

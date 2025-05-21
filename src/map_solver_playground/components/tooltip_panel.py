@@ -33,51 +33,45 @@ class ToolTipPanel(TextPanel):
             position: The position of the panel (x, y)
             size: The size of the panel (width, height)
         """
+        self._text = None
         super().__init__(screen, width, height, font, position, size, color)
 
-        # Default tooltips
-        self._tooltips = [
-            "LMB to place a flag",
-            "Press 'N' to generate a new map",
-            "Press 'V' to view the small map",
-            "Press 'S' solve the map",
-            "Press 'H' to toggle path visibility",
-            'Press "T" to toggle the tooltips',
-            "Press 'ESC' to exit",
-        ]
-
-    @property
-    def tooltips(self):
-        return self._tooltips
-
-    @tooltips.setter
-    def tooltips(self, tooltips: List[str]):
+    def set_text(self, text: str | List[str]):
         """
-        Set new tooltips for the panel.
+        Set the text content of the tooltip panel.
+
         Args:
-            tooltips: List of strings containing the new tooltips
-        """
-        if tooltips is None:
-            raise ValueError("Tooltips cannot be None")
-        if not isinstance(tooltips, list):
-            raise TypeError("Tooltips must be a list of strings")
-        self._tooltips = tooltips
+            text: Either a string that will be split by newlines,
+                  or a list of strings where each item is a tooltip line
 
-    def set_text(self, text):
-        raise ValueError("Text cannot be set. Use tooltips instead.")
+        Raises:
+            ValueError: If text is None
+            TypeError: If text is neither a string nor a list of strings
+        """
+        if text is None:
+            raise ValueError("Text cannot be None")
+
+        if isinstance(text, str):
+            self._text = text
+        elif isinstance(text, list):
+            if not all(isinstance(item, str) for item in text):
+                raise TypeError("All items in the list must be strings")
+            self._text = "\n".join(text)
+        else:
+            raise TypeError("Text must be either a string or a list of strings")
 
     def draw(self):
         """
         Draw the tooltip panel on the screen.
         """
-        if not self.visible:
+        if not self.visible or not isinstance(self._text, str):
             return
 
         self._draw_background()
 
         # Draw the tooltips
         y_offset = 10
-        for tooltip in self._tooltips:
+        for tooltip in self._text.split("\n"):
             text_surface = self.font.render(tooltip, True, self.color)
             text_rect = text_surface.get_rect(topleft=(self.position[0] + 10, self.position[1] + y_offset))
             self.screen.blit(text_surface, text_rect)

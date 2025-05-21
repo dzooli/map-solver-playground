@@ -41,7 +41,7 @@ class TextPanel:
         self.position = position
         self.size = size
         self.visible = True
-        self.text: str | List[str] = ""
+        self._text: str | List[str] = ""
         self.color = color if color is not None else pygame.color.THECOLORS["white"]
 
     def set_text(self, text):
@@ -51,7 +51,11 @@ class TextPanel:
         Args:
             text: The text to display
         """
-        self.text = text
+        if text is None:
+            raise ValueError("Text cannot be None")
+        if not isinstance(text, str):
+            raise TypeError("Text must be a string")
+        self._text = text
 
     def toggle_visibility(self):
         """

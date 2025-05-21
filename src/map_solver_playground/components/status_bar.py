@@ -37,7 +37,6 @@ class StatusBar(TextPanel):
         size = size if size else (width, 30)
 
         super().__init__(screen, width, height, font, position, size, color)
-        self.text = ""
 
     def draw(self):
         """
@@ -48,8 +47,10 @@ class StatusBar(TextPanel):
 
         self._draw_background()
 
+        if not self._text or not isinstance(self._text, str):
+            return
+
         # Draw the text
-        if self.text and isinstance(self.text, str):
-            text_surface = self.font.render(self.text, True, self.color)
-            text_rect = text_surface.get_rect(midleft=(self.position[0] + 10, self.position[1] + self.size[1] // 2))
-            self.screen.blit(text_surface, text_rect)
+        text_surface = self.font.render(self._text, True, self.color)
+        text_rect = text_surface.get_rect(midleft=(self.position[0] + 10, self.position[1] + self.size[1] // 2))
+        self.screen.blit(text_surface, text_rect)
