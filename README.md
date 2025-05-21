@@ -29,11 +29,11 @@ terrain maps, applying filters, and visualizing the results using Pygame.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/map-solver-playground.git
+git clone https://github.com/dzooli/map-solver-playground.git
 cd map-solver-playground
 
 # Install the package using uv (pip is deprecated)
-uv pip install -e .
+uv sync
 ```
 
 ## Usage
@@ -66,16 +66,18 @@ python -m map_solver_playground
 
 ```
 map_solver_playground/
-├── components/       # UI components
-├── maps/             # Map data and manipulation
-│   ├── elements/     # Map elements (Flag, GeoPath, etc.)
-│   ├── filters/      # Map filters
-│   ├── generators/   # Map generation algorithms
-│   ├── renderers/    # Renderers for map elements
-│   ├── solvers/      # Map solving algorithms
-│   ├── types/        # Map data types
-│   └── visualization/# Map visualization tools
-└── metrics/          # Performance measurement utilities
+├── asset_loader        # Asset loaders
+├── assets              # Common assets
+├── components/         # UI components
+├── map/                # Map data and manipulation
+│   ├── elements/       # Map elements (Flag, GeoPath, etc.)
+│   ├── filters/        # Map filters
+│   ├── generator/      # Map generation algorithms
+│   ├── render/         # Rendering related functions and classes
+│   │   ├── element     # Map element rendering
+│   ├── solver/         # Map solving algorithms
+│   ├── types/          # Map data types
+└── profile/            # Performance measurement utilities
 ```
 
 ## License
