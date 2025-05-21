@@ -16,6 +16,14 @@ terrain maps, applying filters, and visualizing the results using Pygame.
 - Map solver for location-based operations
     - Example solver with Flow-field algorithm
 - Switch between original and small map views
+- Modular map elements architecture
+    - Abstract MapElement base class
+    - Concrete implementations: Flag, GeoPath
+    - Dedicated renderers for each element type
+    - Clear separation of concerns:
+        - MapElements manage their own data
+        - Renderers handle visualization
+        - MapView coordinates elements and renderers
 
 ## Installation
 
@@ -60,8 +68,10 @@ python -m map_solver_playground
 map_solver_playground/
 ├── components/       # UI components
 ├── maps/             # Map data and manipulation
+│   ├── elements/     # Map elements (Flag, GeoPath, etc.)
 │   ├── filters/      # Map filters
 │   ├── generators/   # Map generation algorithms
+│   ├── renderers/    # Renderers for map elements
 │   ├── solvers/      # Map solving algorithms
 │   ├── types/        # Map data types
 │   └── visualization/# Map visualization tools

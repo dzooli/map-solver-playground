@@ -2,12 +2,15 @@
 MapView component for displaying and managing map visualization in the application.
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import pygame
 
+from map_solver_playground.maps.elements import MapElement, Flag, GeoPath
 from map_solver_playground.maps.generators import MapGenerator
 from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
+from map_solver_playground.maps.renderers import FlagRenderer, GeoPathRenderer
+from map_solver_playground.maps.renderers.renderer_factory import RendererFactory
 from map_solver_playground.maps.visualization.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.maps.visualization.pygame_renderer import MapRenderer
 
@@ -65,17 +68,9 @@ class MapView:
         self.image_y: int = 0
         self.image: Optional[pygame.Surface] = None
 
-        # Flag positions and resources
-        self.red_flag_pos: Optional[Tuple[int, int]] = None
-        self.green_flag_pos: Optional[Tuple[int, int]] = None
-        self.red_flag_img: Optional[pygame.Surface] = None
-        self.green_flag_img: Optional[pygame.Surface] = None
+        # Map elements
+        self.map_elements: Dict[str, MapElement] = {}
 
-        # Path rendering
-        self.path: Optional[List[Tuple[int, int]]] = None
-        self.path_color: Optional[Tuple[int, int, int]] = None
-        self.path_visible: bool = True
-        self.original_image: Optional[pygame.Surface] = None
 
         # Create initial maps
         self.create_maps(self.colormap)
@@ -133,10 +128,6 @@ class MapView:
         else:
             self.image = self.small_map_image
             message = "Showing small map"
-
-        # If we have an original image, update it for the new view
-        if self.path and self.path_visible and self.image:
-            self.original_image = self.image.copy()
 
         self._center_image()
         return message
@@ -238,73 +229,41 @@ class MapView:
         screen_y = self.image_y + rel_pos[1] - sprite_height // 2
         return screen_x, screen_y
 
-    def set_flag_images(self, red_flag_img: pygame.Surface, green_flag_img: pygame.Surface) -> None:
+
+
+    def get_element(self, name: str) -> MapElement:
         """
-        Set the flag images to be used for drawing.
+        Get a map element by its name.
 
         Args:
-            red_flag_img: The red flag image
-            green_flag_img: The green flag image
-        """
-        self.red_flag_img = red_flag_img
-        self.green_flag_img = green_flag_img
-
-    def set_flag_positions(
-        self, red_flag_pos: Optional[Tuple[int, int]], green_flag_pos: Optional[Tuple[int, int]]
-    ) -> None:
-        """
-        Set the positions of the flags.
-
-        Args:
-            red_flag_pos: The position of the red flag (x, y) relative to the map
-            green_flag_pos: The position of the green flag (x, y) relative to the map
-        """
-        self.red_flag_pos = red_flag_pos
-        self.green_flag_pos = green_flag_pos
-
-    def render_path(self, path: List[Tuple[int, int]], color: Tuple[int, int, int, int]) -> None:
-        """
-        Render a path on the map.
-
-        Args:
-            path: A list of (x, y) tuples representing points on the path
-            color: The color to use for rendering the path
-        """
-        # Store a backup of the original image
-        if self.image:
-            self.original_image = self.image.copy()
-
-        self.path = path
-        self.path_color = color
-        self.path_visible = True
-
-    def hide_path(self) -> bool:
-        """
-        Toggle the visibility of the path.
+            name: The name of the element to get
 
         Returns:
-            bool: The new visibility state of the path
-        """
-        self.path_visible = not self.path_visible
+            MapElement: The map element with the specified name
 
-        # If the path is being hidden, restore the original image
-        if not self.path_visible and self.original_image:
-            if self.current_view == 0:
-                self.map_image = self.original_image.copy()
-                self.image = self.map_image
-            else:
-                self.small_map_image = self.original_image.copy()
-                self.image = self.small_map_image
-
-        return self.path_visible
-
-    def clear_path(self) -> None:
+        Raises:
+            ValueError: If no element with the specified name is found
         """
-        Clear the path data.
+        if name in self.map_elements:
+            return self.map_elements[name]
+        raise ValueError(f"No element found with name: {name}")
+
+    def add_element(self, name: str, element: MapElement) -> None:
         """
-        self.path = None
-        self.path_visible = True
-        self.original_image = None
+        Add a map element to the map view.
+
+        Args:
+            name: The name to associate with the element
+            element: The map element to add
+
+        Raises:
+            ValueError: If an element with the specified name already exists
+        """
+        if name in self.map_elements:
+            raise ValueError(f"An element with name '{name}' already exists")
+        self.map_elements[name] = element
+
+
 
     def draw(self) -> None:
         """
@@ -326,36 +285,11 @@ class MapView:
             1,
         )
 
-        # Draw path if it exists and is visible
-        if self.path and self.path_visible and len(self.path) > 1:
-            # Convert path coordinates to screen coordinates
-            screen_points = []
-            for point in self.path:
-                screen_x = self.image_x + point[0]
-                screen_y = self.image_y + point[1]
-                screen_points.append((screen_x, screen_y))
+        # Draw all map elements using the RendererFactory
+        for element_name, element in self.map_elements.items():
+            # Only draw flags in high resolution view
+            if self.current_view != 0 and isinstance(element, Flag):
+                continue
 
-            # Draw the path as connected lines
-            pygame.draw.lines(
-                self.screen,
-                self.path_color,
-                False,  # Don't connect the last point to the first
-                screen_points,
-                2,  # Line width
-            )
-
-        # Draw flags if in high resolution view and flag images are set
-        if self.current_view == 0 and self.red_flag_img and self.green_flag_img:
-            # Draw red flag if position is set
-            if self.red_flag_pos:
-                screen_pos = self.screen_to_map_pos(
-                    self.red_flag_pos, self.red_flag_img.get_width(), self.red_flag_img.get_height()
-                )
-                self.screen.blit(self.red_flag_img, screen_pos)
-
-            # Draw green flag if position is set
-            if self.green_flag_pos:
-                screen_pos = self.screen_to_map_pos(
-                    self.green_flag_pos, self.green_flag_img.get_width(), self.green_flag_img.get_height()
-                )
-                self.screen.blit(self.green_flag_img, screen_pos)
+            # Use the RendererFactory to render the element
+            RendererFactory.render(self.screen, element, self.image_x, self.image_y)

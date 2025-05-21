@@ -54,6 +54,13 @@ class MapSolverApp:
         self.colormap: TerrainColorGradient = ColorGradient.TOPO_COLORS if colormap is None else colormap
         # Create the map view component
         self.map_view = MapView(self.screen, self.width, self.height, map_size, block_size, self.colormap)
+
+        # Add map elements to the map view
+        from map_solver_playground.maps.elements import Flag, GeoPath
+        self.map_view.add_element("red_flag", Flag(None, None, "red", True))
+        self.map_view.add_element("green_flag", Flag(None, None, "green", True))
+        self.map_view.add_element("geo_path", GeoPath(None, (0, 0, 255), 2, True))
+
         # Status bar for displaying messages
         self.status_bar = StatusBar(self.screen, self.width, self.height, self.font)
         # Info panel for displaying map information
@@ -86,8 +93,11 @@ class MapSolverApp:
                 sprite_name, target_size=(30, 30)
             )
 
-        # Set flag images in the map view
-        self.map_view.set_flag_images(self.resources["img_redflag001"], self.resources["img_greenflag001"])
+        # Set flag images directly on the Flag objects
+        red_flag = self.map_view.get_element("red_flag")
+        green_flag = self.map_view.get_element("green_flag")
+        red_flag.image = self.resources["img_redflag001"]
+        green_flag.image = self.resources["img_greenflag001"]
 
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None):
@@ -149,10 +159,24 @@ class MapSolverApp:
         # Reset flags and click counter when a new map is generated
         self.red_flag_pos = None
         self.green_flag_pos = None
-        self.map_view.set_flag_positions(None, None)
+
+        # Reset flag positions directly on the Flag objects
+        red_flag = self.map_view.get_element("red_flag")
+        green_flag = self.map_view.get_element("green_flag")
+        red_flag.position = None
+        green_flag.position = None
+
         # Clear any existing path
         self.path = None
-        self.map_view.clear_path()
+
+        # Get the geo path element and clear its points
+        geo_path = self.map_view.get_element("geo_path")
+        geo_path.clear_points()
+        geo_path.visible = True
+
+        # Update the path_visible property for backward compatibility
+        self.path_visible = True
+
         self.click_count = 0
         self.status_bar.set_text("New map created")
 
@@ -186,10 +210,13 @@ class MapSolverApp:
             self.solve_path(solver)
 
             if self.path:
-                # Render the path on the map
-                # Convert RGBA color to RGB by taking only the first 3 values
-                # Explicitly cast to tuple of three integers to ensure the correct type
-                self.map_view.render_path(self.path, pygame.color.THECOLORS["blue"])
+                # Get the geo path element and update its properties
+                geo_path = self.map_view.get_element("geo_path")
+                geo_path.path_points = self.path
+                geo_path.color = pygame.color.THECOLORS["blue"][:3]  # Convert RGBA to RGB
+                geo_path.visible = True
+
+                # Update properties for backward compatibility
                 self.path_visible = True
                 self.status_bar.set_text(f"Path solved using {DEFAULT_SOLVER}")
             else:
@@ -205,7 +232,13 @@ class MapSolverApp:
             self.status_bar.set_text("No path to show/hide")
             return
 
-        self.path_visible = self.map_view.hide_path()
+        # Get the geo path element and toggle its visibility
+        geo_path = self.map_view.get_element("geo_path")
+        geo_path.toggle_visibility()
+
+        # Update the path_visible property for backward compatibility
+        self.path_visible = geo_path.visible
+
         status = "shown" if self.path_visible else "hidden"
         self.status_bar.set_text(f"Path {status}")
 
@@ -258,8 +291,11 @@ class MapSolverApp:
                         f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
                     )
 
-            # Update flag positions in the map view
-            self.map_view.set_flag_positions(self.red_flag_pos, self.green_flag_pos)
+            # Update flag positions directly on the Flag objects
+            red_flag = self.map_view.get_element("red_flag")
+            green_flag = self.map_view.get_element("green_flag")
+            red_flag.position = self.red_flag_pos
+            green_flag.position = self.green_flag_pos
             self.click_count += 1
         elif is_within_map:
             # Click is within the map but too close to the edge for flag placement
