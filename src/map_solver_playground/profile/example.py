@@ -1,11 +1,11 @@
 """
-Example usage of the metrics measurement utilities.
+Example usage of the profile measurement utilities.
 """
 
 import logging
 import time
 
-from map_solver_playground.metrics.timing import measure_time
+from map_solver_playground.profile.timing import measure_time
 
 # Configure a custom logger
 custom_logger = logging.getLogger("custom_timing")

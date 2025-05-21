@@ -1,6 +1,7 @@
 # Metrics Module
 
-This module provides utilities for measuring and monitoring the metrics of functions in the map-solver-playground project.
+This module provides utilities for measuring and monitoring the metrics of functions in the map-solver-playground
+project.
 
 ## Features
 
@@ -15,7 +16,7 @@ This module provides utilities for measuring and monitoring the metrics of funct
 #### Basic Usage
 
 ```python
-from map_solver_playground.metrics import measure_time
+from map_solver_playground.profile import measure_time
 
 
 @measure_time
@@ -34,7 +35,7 @@ You can pass your own logger instance to the decorator:
 
 ```python
 import logging
-from map_solver_playground.metrics import measure_time
+from map_solver_playground.profile import measure_time
 
 # Create a custom logger
 custom_logger = logging.getLogger("my_module")
@@ -60,7 +61,7 @@ See `metrics/example.py` for a complete example:
 ```python
 import time
 import logging
-from map_solver_playground.metrics.timing import measure_time
+from map_solver_playground.profile.timing import measure_time
 
 
 # Basic usage - no logging will occur
@@ -86,7 +87,7 @@ result1 = example_function(0.2)  # No logging
 result2 = another_function(0.1)  # Will log execution time with location information
 
 # Example log output:
-# 2023-11-15 14:30:45,123 - custom_timing - DEBUG - Function 'D:\projects\python\map-solver-playground\src\map_solver_playground\metrics\main.py:another_function' executed in 0.100123 seconds
+# 2023-11-15 14:30:45,123 - custom_timing - DEBUG - Function 'D:\projects\python\map-solver-playground\src\map_solver_playground\profile\main.py:another_function' executed in 0.100123 seconds
 ```
 
 ## Configuration
@@ -95,6 +96,7 @@ When using a custom logger with the `measure_time` decorator, you need to ensure
 
 ```python
 import logging
+from map_solver_playground.profile.timing import measure_time
 
 # Create and configure a custom logger
 custom_logger = logging.getLogger("my_timing_logger")

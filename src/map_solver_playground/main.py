@@ -12,7 +12,7 @@ from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel,
 from map_solver_playground.map.generator import MapGeneratorFactory
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
-from map_solver_playground.metrics import measure_time
+from map_solver_playground.profile import measure_time
 
 logger: logging.Logger = logging.getLogger("mapsolver")
 logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture the timing logs
