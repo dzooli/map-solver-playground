@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from map_solver_playground.maps.elements.map_element import MapElement
+from map_solver_playground.maps.types.map_element import MapElement
 
 
 class Flag(MapElement):
@@ -23,7 +23,7 @@ class Flag(MapElement):
     ) -> None:
         """
         Initialize a flag element.
-        
+
         Args:
             position: The (x, y) position of the flag on the map
             image: The image to use for the flag
@@ -39,7 +39,7 @@ class Flag(MapElement):
     def position(self) -> Optional[Tuple[int, int]]:
         """
         Get the position of the flag.
-        
+
         Returns:
             Optional[Tuple[int, int]]: The (x, y) position of the flag, or None if not set
         """
@@ -49,7 +49,7 @@ class Flag(MapElement):
     def position(self, value: Optional[Tuple[int, int]]) -> None:
         """
         Set the position of the flag.
-        
+
         Args:
             value: The new (x, y) position of the flag
         """
@@ -59,7 +59,7 @@ class Flag(MapElement):
     def image(self) -> Optional[pygame.Surface]:
         """
         Get the image of the flag.
-        
+
         Returns:
             Optional[pygame.Surface]: The flag image, or None if not set
         """
@@ -69,7 +69,7 @@ class Flag(MapElement):
     def image(self, value: Optional[pygame.Surface]) -> None:
         """
         Set the image of the flag.
-        
+
         Args:
             value: The new flag image
         """
@@ -79,7 +79,7 @@ class Flag(MapElement):
     def flag_type(self) -> str:
         """
         Get the type of the flag.
-        
+
         Returns:
             str: The flag type
         """
@@ -89,7 +89,7 @@ class Flag(MapElement):
     def flag_type(self, value: str) -> None:
         """
         Set the type of the flag.
-        
+
         Args:
             value: The new flag type
         """
@@ -98,7 +98,7 @@ class Flag(MapElement):
     def get_data(self) -> dict:
         """
         Get the data of the flag.
-        
+
         Returns:
             dict: The flag data including position, type, and visibility
         """

@@ -56,7 +56,8 @@ class MapSolverApp:
         self.map_view = MapView(self.screen, self.width, self.height, map_size, block_size, self.colormap)
 
         # Add map elements to the map view
-        from map_solver_playground.maps.elements import Flag, GeoPath
+        from map_solver_playground.maps.types import Flag, GeoPath
+
         self.map_view.add_element("red_flag", Flag(None, None, "red", True))
         self.map_view.add_element("green_flag", Flag(None, None, "green", True))
         self.map_view.add_element("geo_path", GeoPath(None, (0, 0, 255), 2, True))

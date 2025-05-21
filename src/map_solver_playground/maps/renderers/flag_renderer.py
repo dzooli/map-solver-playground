@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 
 import pygame
 
-from map_solver_playground.maps.elements.flag import Flag
+from map_solver_playground.maps.types.flag import Flag
 
 
 class FlagRenderer:
@@ -108,9 +108,7 @@ class FlagRenderer:
         is_within_safe_area = safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max
 
         # Check if the position is within map boundaries
-        is_within_map = (
-            image_x <= pos[0] <= image_x + map_width and image_y <= pos[1] <= image_y + map_height
-        )
+        is_within_map = image_x <= pos[0] <= image_x + map_width and image_y <= pos[1] <= image_y + map_height
 
         # Calculate coordinates relative to map's upper left corner
         rel_x = pos[0] - image_x

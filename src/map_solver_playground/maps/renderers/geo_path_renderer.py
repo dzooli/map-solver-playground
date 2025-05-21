@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import pygame
 
-from map_solver_playground.maps.elements.geo_path import GeoPath
+from map_solver_playground.maps.types.geo_path import GeoPath
 
 
 class GeoPathRenderer:
@@ -23,7 +23,7 @@ class GeoPathRenderer:
     ) -> None:
         """
         Render a geo path on the screen.
-        
+
         Args:
             screen: The pygame surface to render on
             geo_path: The geo path to render
@@ -36,7 +36,7 @@ class GeoPathRenderer:
 
         # Convert path coordinates to screen coordinates
         screen_points = GeoPathRenderer.path_to_screen_points(geo_path.path_points, image_x, image_y)
-        
+
         # Draw the path as connected lines
         pygame.draw.lines(
             screen,
@@ -54,12 +54,12 @@ class GeoPathRenderer:
     ) -> List[Tuple[int, int]]:
         """
         Convert path points to screen coordinates.
-        
+
         Args:
             path_points: List of (x, y) points relative to the map
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
-            
+
         Returns:
             List[Tuple[int, int]]: List of (x, y) points in screen coordinates
         """

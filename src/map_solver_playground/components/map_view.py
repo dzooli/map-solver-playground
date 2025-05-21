@@ -6,7 +6,7 @@ from typing import List, Tuple, Optional, Dict
 
 import pygame
 
-from map_solver_playground.maps.elements import MapElement, Flag, GeoPath
+from map_solver_playground.maps.types import MapElement, Flag, GeoPath
 from map_solver_playground.maps.generators import MapGenerator
 from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
 from map_solver_playground.maps.renderers import FlagRenderer, GeoPathRenderer
@@ -70,7 +70,6 @@ class MapView:
 
         # Map elements
         self.map_elements: Dict[str, MapElement] = {}
-
 
         # Create initial maps
         self.create_maps(self.colormap)
@@ -229,8 +228,6 @@ class MapView:
         screen_y = self.image_y + rel_pos[1] - sprite_height // 2
         return screen_x, screen_y
 
-
-
     def get_element(self, name: str) -> MapElement:
         """
         Get a map element by its name.
@@ -262,8 +259,6 @@ class MapView:
         if name in self.map_elements:
             raise ValueError(f"An element with name '{name}' already exists")
         self.map_elements[name] = element
-
-
 
     def draw(self) -> None:
         """
