@@ -40,6 +40,16 @@ class MapSolverApp:
         map_logger: logging.Logger = None,
         generator: str = "RecursiveDiamondSquareGenerator",
     ):
+        self.tooltips = [
+            "LMB to place a flag",
+            "Press 'N' to generate a new map",
+            "Press 'V' to view the small map",
+            "Press 'S' solve the map",
+            "Press 'H' to toggle path visibility",
+            'Press "T" to toggle the tooltips',
+            "Press 'Q' to exit",
+        ]
+
         self._generator_name = generator
         self.map_generator = MapGeneratorFactory.create(self._generator_name, width=MAP_SIZE, height=MAP_SIZE)
 
@@ -68,6 +78,7 @@ class MapSolverApp:
         self.info_panel = InfoPanel(self.screen, self.width, self.height, self.font)
         # Tooltip panel for displaying instructions
         self.tooltip_panel = ToolTipPanel(self.screen, self.width, self.height, self.font)
+        self.tooltip_panel.set_text(self.tooltips)
         # Widgets all in one
         self.widgets = [self.map_view, self.status_bar, self.info_panel, self.tooltip_panel]
 
@@ -133,7 +144,7 @@ class MapSolverApp:
 
     def _handle_key_press(self, key):
         """Handle single key press events"""
-        if key == pygame.K_ESCAPE:
+        if key == pygame.K_q:
             self.running = False
         elif key == pygame.K_n:
             self._handle_new_map()
@@ -264,6 +275,8 @@ class MapSolverApp:
         if is_within_safe_area:
             # Update click count and handle flag placement based on click_count modulo 2
             if self.click_count % 2 == 0:
+                if self.map_view.get_element("geo_path").visible:
+                    self.map_view.get_element("geo_path").toggle_visibility()
                 # First click (or third, fifth, etc.) - place a red flag
                 self.red_flag_pos = (rel_x, rel_y)
                 self.green_flag_pos = None
