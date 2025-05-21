@@ -204,6 +204,8 @@ cython_debug/
 
 /lcov.info
 coverage.lcov
+**/coverage.lcov
+
 htmlcov
 .idea/
 .python_version
