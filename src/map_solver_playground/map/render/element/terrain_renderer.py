@@ -6,7 +6,7 @@ import pygame
 import numpy as np
 
 from map_solver_playground.map.types.terrain import Terrain
-from map_solver_playground.map.render.color_maps import TerrainColorGradient, ColorGradient
+from map_solver_playground.map.render.color_maps import ColorGradient
 
 
 class TerrainRenderer:
@@ -35,7 +35,7 @@ class TerrainRenderer:
             return
 
         map_data = terrain.map_data
-        terrain_surface = self._create_terrain_surface(map_data)
+        terrain_surface = TerrainRenderer._create_terrain_surface(map_data)
         screen.blit(terrain_surface, (image_x, image_y))
 
     @staticmethod
