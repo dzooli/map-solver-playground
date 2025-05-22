@@ -63,8 +63,17 @@ class MapSolverApp:
         self._logger: logging.Logger | None = map_logger
 
         self.colormap: TerrainColorGradient = ColorGradient.TOPO_COLORS if colormap is None else colormap
+
+        # Initialize the terrain
+        terrain = Terrain(
+            visible=True,
+            map_size=map_size,
+            block_size=block_size,
+            colormap=self.colormap
+        )
+
         # Create the map view component
-        self.map_view = MapView(self.screen, self.width, self.height, map_size, block_size, self.colormap)
+        self.map_view = MapView(self.screen, self.width, self.height, terrain, map_size, block_size, self.colormap)
 
         # Add map elements to the map view
         from map_solver_playground.map.types import Flag, GeoPath

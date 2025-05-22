@@ -20,6 +20,7 @@ class TerrainRenderer:
         terrain: Terrain,
         image_x: int,
         image_y: int,
+        current_view: int = 0,
     ) -> None:
         """
         Render a terrain on the screen.
@@ -29,13 +30,14 @@ class TerrainRenderer:
             terrain: The terrain to render
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
+            current_view: The current view index (0 for original, 1 for small map)
         """
         # Skip rendering if the terrain is not visible
         if not terrain.visible:
             return
 
         # Use the appropriate image based on the current view
-        if terrain.current_view == 0:
+        if current_view == 0:
             # Original map view
             if terrain.map_image is None:
                 return

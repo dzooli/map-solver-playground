@@ -20,6 +20,7 @@ class GeoPathRenderer:
         geo_path: GeoPath,
         image_x: int,
         image_y: int,
+        current_view: int = 0,
     ) -> None:
         """
         Render a geo path on the screen.
@@ -29,6 +30,7 @@ class GeoPathRenderer:
             geo_path: The geo path to render
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
+            current_view: The current view index (0 for original, 1 for small map)
         """
         # Skip rendering if the path is not visible or has no points
         if not geo_path.visible or geo_path.is_empty():

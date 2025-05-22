@@ -20,6 +20,7 @@ class FlagRenderer:
         flag: Flag,
         image_x: int,
         image_y: int,
+        current_view: int = 0,
     ) -> None:
         """
         Render a flag on the screen.
@@ -29,6 +30,7 @@ class FlagRenderer:
             flag: The flag to render
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
+            current_view: The current view index (0 for original, 1 for small map)
         """
         # Skip rendering if the flag is not visible or has no position or image
         if not flag.visible or flag.position is None or flag.image is None:

@@ -46,7 +46,7 @@ class RendererFactory:
         return renderer
 
     @classmethod
-    def render(cls, screen, element: MapElement, image_x: int, image_y: int) -> None:
+    def render(cls, screen, element: MapElement, image_x: int, image_y: int, current_view: int = 0) -> None:
         """
         Render a map element on the screen.
 
@@ -55,6 +55,7 @@ class RendererFactory:
             element: The map element to render
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
+            current_view: The current view index (0 for original, 1 for small map)
         """
         renderer = cls.get_renderer(element)
-        renderer.render(screen, element, image_x, image_y)
+        renderer.render(screen, element, image_x, image_y, current_view)

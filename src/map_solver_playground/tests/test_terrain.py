@@ -22,7 +22,7 @@ def test_terrain():
     # Create a map with some terrain data
     map_size = 256
     map_data = Map(map_size, map_size)
-    
+
     # Generate some simple terrain data (a gradient)
     for y in range(map_size):
         for x in range(map_size):
@@ -33,33 +33,30 @@ def test_terrain():
     # Create a terrain element
     terrain = Terrain(map_data)
 
-    # Create a map view
-    map_view = MapView(screen, 800, 600)
-    
-    # Add the terrain element to the map view
-    map_view.add_element("terrain", terrain)
+    # Create a map view with the terrain element
+    map_view = MapView(screen, 800, 600, terrain)
 
     # Main loop
     running = True
     clock = pygame.time.Clock()
-    
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        
+
         # Clear the screen
         screen.fill((0, 0, 0))
-        
+
         # Draw the map view
         map_view.draw()
-        
+
         # Update the display
         pygame.display.flip()
-        
+
         # Cap the frame rate
         clock.tick(60)
-    
+
     pygame.quit()
 
 

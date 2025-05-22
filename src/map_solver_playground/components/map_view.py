@@ -28,6 +28,7 @@ class MapView:
         screen: pygame.Surface,
         width: int,
         height: int,
+        terrain: Terrain,
         map_size: int = MAP_SIZE,
         block_size: int = 30,
         colormap: Optional[TerrainColorGradient] = None,
@@ -39,6 +40,7 @@ class MapView:
             screen: The pygame screen to draw on
             width: The width of the screen
             height: The height of the screen
+            terrain: The terrain element to use
             map_size: The size of the map (width and height)
             block_size: The size of blocks for the small map
             colormap: The color gradient to use for map render
@@ -56,16 +58,10 @@ class MapView:
         # Map elements
         self.map_elements: Dict[str, MapElement] = {}
 
-        # Create terrain element
+        # Store the colormap
         self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
-        terrain = Terrain(
-            visible=True,
-            map_size=map_size,
-            block_size=block_size,
-            colormap=self.colormap
-        )
-        # Initialize the terrain's current view to match the MapView's current view
-        terrain.current_view = self.current_view
+
+        # Add the terrain element to the map view
         self.add_element(TERRAIN_ELEMENT_NAME, terrain)
 
         # Create initial map
@@ -103,9 +99,6 @@ class MapView:
         """
         self.current_view = 1 - self.current_view
         terrain = self.get_element(TERRAIN_ELEMENT_NAME)
-
-        # Update the terrain's current view
-        terrain.current_view = self.current_view
 
         if self.current_view == 0:
             self.image = terrain.map_image
@@ -245,24 +238,10 @@ class MapView:
         """
         Draw the map view on the screen.
         """
-        # Draw a border around the map
-        pygame.draw.rect(
-            self.screen,
-            pygame.color.THECOLORS["black"],
-            (
-                self.image_x,
-                self.image_y,
-                self.image.get_width(),
-                self.image.get_height(),
-            ),
-            1,
-        )
-
-        # Draw all map elements using the RendererFactory
         for element_name, element in self.map_elements.items():
             # Only draw flags in high resolution view
             if self.current_view != 0 and isinstance(element, Flag):
                 continue
 
             # Use the RendererFactory to render the element
-            RendererFactory.render(self.screen, element, self.image_x, self.image_y)
+            RendererFactory.render(self.screen, element, self.image_x, self.image_y, self.current_view)

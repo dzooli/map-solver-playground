@@ -47,7 +47,6 @@ class Terrain(MapElement):
         self.map_height = map_size
         self.block_size = block_size
         self.colormap = colormap
-        self.current_view = 0  # 0 = original map, 1 = small map
 
         # Map data and images
         self.map_generator: Optional[MapGenerator] = None
