@@ -113,7 +113,8 @@ map_solver_playground/
 │   │   ├── element     # Map element rendering
 │   ├── solver/         # Map solving algorithms
 │   ├── types/          # Map data types
-└── profile/            # Performance measurement utilities
+├── profile/            # Performance measurement utilities
+└── tests/              # Test suites
 ```
 
 ## Testing
