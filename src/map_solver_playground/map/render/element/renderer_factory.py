@@ -5,8 +5,10 @@ Factory for creating element for map elements.
 from typing import Dict, Type
 
 from map_solver_playground.map.types import MapElement, Flag, GeoPath
+from map_solver_playground.map.types.terrain import Terrain
 from map_solver_playground.map.render.element.flag_renderer import FlagRenderer
 from map_solver_playground.map.render.element.geo_path_renderer import GeoPathRenderer
+from map_solver_playground.map.render.element.terrain_renderer import TerrainRenderer
 
 
 class RendererFactory:
@@ -18,6 +20,7 @@ class RendererFactory:
     _renderers: Dict[Type[MapElement], Type] = {
         Flag: FlagRenderer,
         GeoPath: GeoPathRenderer,
+        Terrain: TerrainRenderer,
     }
 
     @classmethod

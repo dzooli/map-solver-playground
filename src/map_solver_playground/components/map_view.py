@@ -6,13 +6,12 @@ from typing import List, Tuple, Optional, Dict
 
 import pygame
 
-from map_solver_playground.map.types import MapElement, Flag, GeoPath
-from map_solver_playground.map.generator import MapGenerator
-from map_solver_playground.map.generator.diamond_square import DiamondSquareGenerator
+from map_solver_playground.map.render.pygame_renderer import MapRenderer
+from map_solver_playground.map.types import MapElement, Flag, GeoPath, Terrain
+from map_solver_playground.map.generator import MapGenerator, DiamondSquareGenerator
 from map_solver_playground.map.render.element import FlagRenderer, GeoPathRenderer
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
-from map_solver_playground.map.render.pygame_renderer import MapRenderer
 
 MAP_SIZE = 500
 BLOCKS = 10

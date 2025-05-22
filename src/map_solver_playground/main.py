@@ -3,7 +3,7 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, cast
 
 import pygame
 
@@ -12,6 +12,7 @@ from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel,
 from map_solver_playground.map.generator import MapGeneratorFactory
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
+from map_solver_playground.map.types import Terrain, GeoPath, Flag
 from map_solver_playground.profile import measure_time
 
 logger: logging.Logger = logging.getLogger("mapsolver")
