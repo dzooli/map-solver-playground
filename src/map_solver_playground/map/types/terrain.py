@@ -7,15 +7,13 @@ from typing import Optional, Tuple
 import numpy as np
 import pygame
 
+from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.map_data import Map
 from map_solver_playground.map.types.map_element import MapElement
 from map_solver_playground.map.generator import MapGenerator
 from map_solver_playground.map.generator.diamond_square import DiamondSquareGenerator
 from map_solver_playground.map.render.color_maps import TerrainColorGradient
 from map_solver_playground.map.render.pygame_renderer import MapRenderer
-
-MAP_SIZE = 500
-BLOCKS = 10
 
 
 class Terrain(MapElement):
@@ -27,7 +25,7 @@ class Terrain(MapElement):
         self,
         map_data: Optional[Map] = None,
         visible: bool = True,
-        map_size: int = MAP_SIZE,
+        map_size: int = DEFAULT_MAP_SIZE,
         block_size: int = 30,
         colormap: Optional[TerrainColorGradient] = None,
     ) -> None:
@@ -73,7 +71,7 @@ class Terrain(MapElement):
             raise ValueError("Color map must be provided")
 
         # Create a map generator and generate a map
-        self.map_width = self.map_height = MAP_SIZE
+        # Use the instance variables map_width and map_height (already set in __init__)
         self.map_generator = (
             generator
             if isinstance(generator, MapGenerator)
@@ -85,7 +83,7 @@ class Terrain(MapElement):
         self.map_image = MapRenderer.color_map(self.map_grayscale, colors)
 
         # Generate a smaller version of the map
-        self.block_size = MAP_SIZE // BLOCKS
+        self.block_size = self.map_width // DEFAULT_BLOCKS
         self.small_map_generator = self.map_generator.generate_small_map(self.block_size)
         self.small_map_grayscale = MapRenderer.to_pygame_image(self.small_map_generator.map)
         # Apply color mapping to the small grayscale image

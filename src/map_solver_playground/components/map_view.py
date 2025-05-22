@@ -6,12 +6,11 @@ from typing import Tuple, Optional, Dict
 
 import pygame
 
+from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory
 from map_solver_playground.map.types import MapElement, Flag, Terrain
 
-MAP_SIZE = 500
-BLOCKS = 10
 TERRAIN_ELEMENT_NAME = "terrain"
 
 
@@ -26,7 +25,7 @@ class MapView:
         width: int,
         height: int,
         terrain: Terrain,
-        map_size: int = MAP_SIZE,
+        map_size: int = DEFAULT_MAP_SIZE,
         block_size: int = 30,
         colormap: Optional[TerrainColorGradient] = None,
         x: int = 0,
@@ -135,12 +134,21 @@ class MapView:
         # Adjust position to be relative to the MapView's position
         adjusted_pos = (pos[0] - self.x, pos[1] - self.y)
 
-        # Calculate the safe area where sprites can be placed without exceeding MapView boundaries
+        # Calculate the safe area where sprites can be placed without exceeding map boundaries
         # The sprite is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
-        safe_x_min = sprite_width // 2
-        safe_x_max = self.width - sprite_width // 2
-        safe_y_min = sprite_height // 2
-        safe_y_max = self.height - sprite_height // 2
+        if self.map is not None:
+            map_width = self.map.width
+            map_height = self.map.height
+            safe_x_min = sprite_width // 2
+            safe_x_max = map_width - sprite_width // 2
+            safe_y_min = sprite_height // 2
+            safe_y_max = map_height - sprite_height // 2
+        else:
+            # If no map is available, use the MapView dimensions
+            safe_x_min = sprite_width // 2
+            safe_x_max = self.width - sprite_width // 2
+            safe_y_min = sprite_height // 2
+            safe_y_max = self.height - sprite_height // 2
 
         # Check if position is within safe area
         is_within_safe_area = (
@@ -151,10 +159,17 @@ class MapView:
         if self.map is not None:
             map_width = self.map.width
             map_height = self.map.height
-            is_within_map = 0 <= adjusted_pos[0] <= map_width and 0 <= adjusted_pos[1] <= map_height
+            # Account for sprite size to ensure it's fully within map boundaries
+            is_within_map = (
+                sprite_width // 2 <= adjusted_pos[0] <= map_width - sprite_width // 2
+                and sprite_height // 2 <= adjusted_pos[1] <= map_height - sprite_height // 2
+            )
         else:
             # If no map is available, use the MapView dimensions
-            is_within_map = 0 <= adjusted_pos[0] <= self.width and 0 <= adjusted_pos[1] <= self.height
+            is_within_map = (
+                sprite_width // 2 <= adjusted_pos[0] <= self.width - sprite_width // 2
+                and sprite_height // 2 <= adjusted_pos[1] <= self.height - sprite_height // 2
+            )
 
         # Calculate coordinates relative to map's upper left corner (which is now at 0,0)
         rel_x = adjusted_pos[0]

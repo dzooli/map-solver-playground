@@ -9,6 +9,7 @@ import pygame
 
 from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
+from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.generator import MapGeneratorFactory, MapGenerator
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
@@ -22,11 +23,9 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
-MAP_SIZE = 600
-BLOCKS = 10
-
 # Default solver to use for pathfinding
 DEFAULT_SOLVER = "FlowFieldSolver"
+MAP_SIZE = 600
 
 
 class MapSolverApp:
@@ -52,7 +51,7 @@ class MapSolverApp:
         ]
 
         self._generator_name = generator
-        self.map_generator = MapGeneratorFactory.create(self._generator_name, width=MAP_SIZE, height=MAP_SIZE)
+        self.map_generator = MapGeneratorFactory.create(self._generator_name, width=map_size, height=map_size)
 
         pygame.init()
         self.width, self.height = width, height
@@ -62,15 +61,23 @@ class MapSolverApp:
 
         self._logger: logging.Logger | None = map_logger
 
-        self.colormap: TerrainColorGradient = ColorGradient.TOPO_COLORS if colormap is None else colormap
+        # Status bar for displaying messages
+        self.status_bar = StatusBar(self.screen, self.width, self.height, self.font)
+        # Info panel for displaying map information
+        self.info_panel = InfoPanel(self.screen, self.width, self.height, self.font)
+        # Tooltip panel for displaying instructions
+        self.tooltip_panel = ToolTipPanel(self.screen, self.width, self.height, self.font)
+        self.tooltip_panel.set_text(self.tooltips)
 
         # Initialize the terrain
+        self.colormap: TerrainColorGradient = ColorGradient.TOPO_COLORS if colormap is None else colormap
         terrain = Terrain(visible=True, map_size=map_size, block_size=block_size, colormap=self.colormap)
 
         # Create the map view component
         # Position it at the center of the screen
         map_view_x = self.width // 2 - map_size // 2
-        map_view_y = self.height // 2 - map_size // 2
+        # logger.debug(f"Tooltip panel height: {self.tooltip_panel.size[1]}")
+        map_view_y = self.height // 2 - map_size // 2 - self.tooltip_panel.size[1] // 2
         self.map_view = MapView(
             self.screen, self.width, self.height, terrain, map_size, block_size, self.colormap, map_view_x, map_view_y
         )
@@ -82,13 +89,6 @@ class MapSolverApp:
         self.map_view.add_element("green_flag", Flag(None, None, "green", True))
         self.map_view.add_element("geo_path", GeoPath(None, (0, 0, 255), 2, True))
 
-        # Status bar for displaying messages
-        self.status_bar = StatusBar(self.screen, self.width, self.height, self.font)
-        # Info panel for displaying map information
-        self.info_panel = InfoPanel(self.screen, self.width, self.height, self.font)
-        # Tooltip panel for displaying instructions
-        self.tooltip_panel = ToolTipPanel(self.screen, self.width, self.height, self.font)
-        self.tooltip_panel.set_text(self.tooltips)
         # Widgets all in one
         self.widgets = [self.map_view, self.status_bar, self.info_panel, self.tooltip_panel]
 
@@ -298,52 +298,52 @@ class MapSolverApp:
         flag = self.resources["img_redflag001"]
 
         # Check if click is within safe area of the map
-        is_within_safe_area, is_within_map, rel_x, rel_y = self.map_view.is_within_safe_area(
+        is_within_safe_area, _, rel_x, rel_y = self.map_view.is_within_safe_area(
             pos, flag.get_width(), flag.get_height()
         )
 
-        if is_within_safe_area:
-            # Update click count and handle flag placement based on click_count modulo 2
-            if self.click_count % 2 == 0:
-                if self.map_view.get_element("geo_path").visible:
-                    self.map_view.get_element("geo_path").toggle_visibility()
-                # First click (or third, fifth, etc.) - place a red flag
-                self.red_flag_pos = (rel_x, rel_y)
-                self.green_flag_pos = None
-                self.status_bar.set_text(f"Red flag placed at ({rel_x}, {rel_y})")
-            else:  # self.click_count % 2 == 1
-                # Second click (or fourth, sixth, etc.) - place a green flag
-                self.green_flag_pos = (rel_x, rel_y)
-                self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
+        if not is_within_safe_area:
+            self.status_bar.set_text("Cannot place flag: click is outside safe area")
+            return
 
-                # Log both coordinates
-                if self._logger:
-                    self._logger.info(f"Red flag: {self.red_flag_pos}, Green flag: {self.green_flag_pos}")
+        # Update click count and handle flag placement based on click_count modulo 2
+        if self.click_count % 2 == 0:
+            if self.map_view.get_element("geo_path").visible:
+                self.map_view.get_element("geo_path").toggle_visibility()
+            # First click (or third, fifth, etc.) - place a red flag
+            self.red_flag_pos = (rel_x, rel_y)
+            self.green_flag_pos = None
+            self.status_bar.set_text(f"Red flag placed at ({rel_x}, {rel_y})")
+        else:  # self.click_count % 2 == 1
+            # Second click (or fourth, sixth, etc.) - place a green flag
+            self.green_flag_pos = (rel_x, rel_y)
+            self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
 
-                    # Calculate coordinates on the smaller map
-                    block_size = MAP_SIZE // BLOCKS
-                    small_coords = {
-                        "red_x": self.red_flag_pos[0] // block_size,
-                        "red_y": self.red_flag_pos[1] // block_size,
-                        "green_x": self.green_flag_pos[0] // block_size,
-                        "green_y": self.green_flag_pos[1] // block_size,
-                    }
+            # Log both coordinates
+            if self._logger:
+                self._logger.info(f"Red flag: {self.red_flag_pos}, Green flag: {self.green_flag_pos}")
 
-                    # Log coordinates on the smaller map
-                    self._logger.info(
-                        f"Small map - Red flag: ({small_coords['red_x']}, {small_coords['red_y']}), "
-                        f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
-                    )
+                # Calculate coordinates on the smaller map
+                block_size = DEFAULT_MAP_SIZE // DEFAULT_BLOCKS
+                small_coords = {
+                    "red_x": self.red_flag_pos[0] // block_size,
+                    "red_y": self.red_flag_pos[1] // block_size,
+                    "green_x": self.green_flag_pos[0] // block_size,
+                    "green_y": self.green_flag_pos[1] // block_size,
+                }
 
-            # Update flag positions directly on the Flag objects
-            red_flag = self.map_view.get_element("red_flag")
-            green_flag = self.map_view.get_element("green_flag")
-            red_flag.position = self.red_flag_pos
-            green_flag.position = self.green_flag_pos
-            self.click_count += 1
-        elif is_within_map:
-            # Click is within the map but too close to the edge for flag placement
-            self.status_bar.set_text("Cannot place flag: too close to map edge")
+                # Log coordinates on the smaller map
+                self._logger.info(
+                    f"Small map - Red flag: ({small_coords['red_x']}, {small_coords['red_y']}), "
+                    f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
+                )
+
+        # Update flag positions directly on the Flag objects
+        red_flag = self.map_view.get_element("red_flag")
+        green_flag = self.map_view.get_element("green_flag")
+        red_flag.position = self.red_flag_pos
+        green_flag.position = self.green_flag_pos
+        self.click_count += 1
 
     def _update_info_panel(self):
         """Update the info panel with map information"""
