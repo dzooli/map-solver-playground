@@ -68,7 +68,12 @@ class MapSolverApp:
         terrain = Terrain(visible=True, map_size=map_size, block_size=block_size, colormap=self.colormap)
 
         # Create the map view component
-        self.map_view = MapView(self.screen, self.width, self.height, terrain, map_size, block_size, self.colormap)
+        # Position it at the center of the screen
+        map_view_x = self.width // 2 - map_size // 2
+        map_view_y = self.height // 2 - map_size // 2
+        self.map_view = MapView(
+            self.screen, self.width, self.height, terrain, map_size, block_size, self.colormap, map_view_x, map_view_y
+        )
 
         # Add map elements to the map view
         from map_solver_playground.map.types import Flag, GeoPath
@@ -138,9 +143,8 @@ class MapSolverApp:
         terrain = self.map_view.get_element("terrain")
         terrain.create_maps(colors_to_use, generator)
 
-        # Set the current image to the terrain's map image
-        self.map_view.image = terrain.map_image
-        self.map_view._center_image()
+        # Set the view to show the original map
+        self.map_view.set_view(0)
 
     @measure_time(logger_instance=logger)
     def solve_path(self, solver: MapSolver = None) -> None:

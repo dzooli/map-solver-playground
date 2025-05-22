@@ -29,6 +29,8 @@ class MapView:
         map_size: int = MAP_SIZE,
         block_size: int = 30,
         colormap: Optional[TerrainColorGradient] = None,
+        x: int = 0,
+        y: int = 0,
     ) -> None:
         """
         Initialize the map view component.
@@ -41,16 +43,19 @@ class MapView:
             map_size: The size of the map (width and height)
             block_size: The size of blocks for the small map
             colormap: The color gradient to use for map render
+            x: The x-coordinate of the MapView's position on the screen
+            y: The y-coordinate of the MapView's position on the screen
         """
         self.screen: pygame.Surface = screen
         self.width: int = width
         self.height: int = height
 
+        # Position of the MapView on the screen
+        self.x: int = x
+        self.y: int = y
+
         # Current view state
         self.current_view: int = 0  # 0 = original map, 1 = small map
-        self.image_x: int = 0
-        self.image_y: int = 0
-        self.image: Optional[pygame.Surface] = None
 
         # Map elements
         self.map_elements: Dict[str, MapElement] = {}
@@ -61,9 +66,6 @@ class MapView:
         # Add the terrain element to the map view
         self.add_element(TERRAIN_ELEMENT_NAME, terrain)
 
-        # Initialize image
-        self.image = None
-
     def switch_view(self) -> str:
         """
         Switch between original and small map views.
@@ -72,29 +74,23 @@ class MapView:
             str: A message describing the current view
         """
         self.current_view = 1 - self.current_view
-        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
 
         if self.current_view == 0:
-            self.image = terrain.map_image
             message = "Showing original"
         else:
-            self.image = terrain.small_map_image
             message = "Showing small map"
 
-        self._center_image()
         return message
 
-    def _center_image(self) -> None:
+    def set_view(self, view_index: int) -> None:
         """
-        Center the current image on the screen.
+        Set the current view to the specified index.
+
+        Args:
+            view_index: The view index to set (0 for original, 1 for small map)
         """
-        if self.image is None:
-            # Set default values for image position when image is not available yet
-            self.image_x = self.width // 2
-            self.image_y = self.height // 2
-        else:
-            self.image_x = self.width // 2 - self.image.get_width() // 2
-            self.image_y = self.height // 2 - self.image.get_height() // 2
+        if view_index in (0, 1):
+            self.current_view = view_index
 
     def get_map_info(self) -> str:
         """
@@ -136,55 +132,35 @@ class MapView:
                 rel_x: The x-coordinate relative to the map's upper left corner
                 rel_y: The y-coordinate relative to the map's upper left corner
         """
-        # Check if the image is available
-        if self.image is None:
-            # Return default values when image is not available
-            return False, False, 0, 0
+        # Adjust position to be relative to the MapView's position
+        adjusted_pos = (pos[0] - self.x, pos[1] - self.y)
 
-        # Check if the click is within map boundaries
-        map_width, map_height = self.image.get_width(), self.image.get_height()
-
-        # Calculate the safe area where sprites can be placed without exceeding map boundaries
+        # Calculate the safe area where sprites can be placed without exceeding MapView boundaries
         # The sprite is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
-        safe_x_min = self.image_x + sprite_width // 2
-        safe_x_max = self.image_x + map_width - sprite_width // 2
-        safe_y_min = self.image_y + sprite_height // 2
-        safe_y_max = self.image_y + map_height - sprite_height // 2
+        safe_x_min = sprite_width // 2
+        safe_x_max = self.width - sprite_width // 2
+        safe_y_min = sprite_height // 2
+        safe_y_max = self.height - sprite_height // 2
 
         # Check if position is within safe area
-        is_within_safe_area = safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max
-
-        # Check if the position is within map boundaries
-        is_within_map = (
-            self.image_x <= pos[0] <= self.image_x + map_width and self.image_y <= pos[1] <= self.image_y + map_height
+        is_within_safe_area = (
+            safe_x_min <= adjusted_pos[0] <= safe_x_max and safe_y_min <= adjusted_pos[1] <= safe_y_max
         )
 
-        # Calculate coordinates relative to map's upper left corner
-        rel_x = pos[0] - self.image_x
-        rel_y = pos[1] - self.image_y
+        # Check if the position is within map boundaries
+        if self.map is not None:
+            map_width = self.map.width
+            map_height = self.map.height
+            is_within_map = 0 <= adjusted_pos[0] <= map_width and 0 <= adjusted_pos[1] <= map_height
+        else:
+            # If no map is available, use the MapView dimensions
+            is_within_map = 0 <= adjusted_pos[0] <= self.width and 0 <= adjusted_pos[1] <= self.height
+
+        # Calculate coordinates relative to map's upper left corner (which is now at 0,0)
+        rel_x = adjusted_pos[0]
+        rel_y = adjusted_pos[1]
 
         return is_within_safe_area, is_within_map, rel_x, rel_y
-
-    def screen_to_map_pos(
-        self, rel_pos: Optional[Tuple[int, int]], sprite_width: int, sprite_height: int
-    ) -> Optional[Tuple[int, int]]:
-        """
-        Convert relative map position to screen position for sprite placement.
-
-        Args:
-            rel_pos: The (x, y) position relative to the map's upper left corner
-            sprite_width: The width of the sprite
-            sprite_height: The height of the sprite
-
-        Returns:
-            tuple: The (x, y) screen position for the sprite
-        """
-        if rel_pos is None:
-            return None
-
-        screen_x = self.image_x + rel_pos[0] - sprite_width // 2
-        screen_y = self.image_y + rel_pos[1] - sprite_height // 2
-        return screen_x, screen_y
 
     def get_element(self, name: str) -> MapElement:
         """
@@ -228,4 +204,5 @@ class MapView:
                 continue
 
             # Use the RendererFactory to render the element
-            RendererFactory.render(self.screen, element, self.image_x, self.image_y, self.current_view)
+            # image_x and image_y are now 0, representing the origin of the upper-left corner of the view
+            RendererFactory.render(self.screen, element, self.x, self.y, self.current_view)
