@@ -35,6 +35,7 @@ dependencies = [
 
 [project.scripts]
 map-solver = "map_solver_playground.main:main"
+map-solver-perftest = "map_solver_playground.tests.performance.test_mapview_performance:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -47,9 +48,10 @@ line-length = 120
 target-version = ["py312"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src/map_solver_playground/tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=map_solver_playground --cov-report=term-missing --cov-report=lcov"
+markers = ['performance']
+addopts = "-v --cov=map_solver_playground --cov-report=term-missing --cov-report=lcov -k 'not performance'"
 
 [dependency-groups]
 dev = [
