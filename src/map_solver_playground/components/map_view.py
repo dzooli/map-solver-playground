@@ -6,6 +6,7 @@ from typing import Tuple, Optional, Dict
 
 import pygame
 
+from map_solver_playground.components.widget import Widget
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory
@@ -14,7 +15,7 @@ from map_solver_playground.map.types import MapElement, Flag, Terrain
 TERRAIN_ELEMENT_NAME = "terrain"
 
 
-class MapView:
+class MapView(Widget):
     """
     A UI component that handles the render and management of map.
     """
@@ -22,8 +23,8 @@ class MapView:
     def __init__(
         self,
         screen: pygame.Surface,
-        width: int,
-        height: int,
+        screen_width: int,
+        screen_height: int,
         terrain: Terrain,
         map_size: int = DEFAULT_MAP_SIZE,
         block_size: int = 30,
@@ -36,8 +37,8 @@ class MapView:
 
         Args:
             screen: The pygame screen to draw on
-            width: The width of the screen
-            height: The height of the screen
+            screen_width: The width of the screen
+            screen_height: The height of the screen
             terrain: The terrain element to use
             map_size: The size of the map (width and height)
             block_size: The size of blocks for the small map
@@ -45,13 +46,13 @@ class MapView:
             x: The x-coordinate of the MapView's position on the screen
             y: The y-coordinate of the MapView's position on the screen
         """
-        self.screen: pygame.Surface = screen
-        self.width: int = width
-        self.height: int = height
+        position = (x, y)
+        size = (screen_width, screen_height)  # Using screen dimensions as default size
+        super().__init__(screen, screen_width, screen_height, position, size)
 
-        # Position of the MapView on the screen
-        self.x: int = x
-        self.y: int = y
+        # For backward compatibility, maintain x and y properties
+        self._x: int = x
+        self._y: int = y
 
         # Current view state
         self.current_view: int = 0  # 0 = original map, 1 = small map
@@ -64,6 +65,28 @@ class MapView:
 
         # Add the terrain element to the map view
         self.add_element(TERRAIN_ELEMENT_NAME, terrain)
+
+    @property
+    def x(self) -> int:
+        """Get the x-coordinate of the MapView's position."""
+        return self.position[0]
+
+    @x.setter
+    def x(self, value: int) -> None:
+        """Set the x-coordinate of the MapView's position."""
+        self._x = value
+        self.position = (value, self.position[1])
+
+    @property
+    def y(self) -> int:
+        """Get the y-coordinate of the MapView's position."""
+        return self.position[1]
+
+    @y.setter
+    def y(self, value: int) -> None:
+        """Set the y-coordinate of the MapView's position."""
+        self._y = value
+        self.position = (self.position[0], value)
 
     def switch_view(self) -> str:
         """
@@ -132,7 +155,7 @@ class MapView:
                 rel_y: The y-coordinate relative to the map's upper left corner
         """
         # Adjust position to be relative to the MapView's position
-        adjusted_pos = (pos[0] - self.x, pos[1] - self.y)
+        adjusted_pos = (pos[0] - self.position[0], pos[1] - self.position[1])
 
         # Calculate the safe area where sprites can be placed without exceeding map boundaries
         # The sprite is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
@@ -146,9 +169,9 @@ class MapView:
         else:
             # If no map is available, use the MapView dimensions
             safe_x_min = sprite_width // 2
-            safe_x_max = self.width - sprite_width // 2
+            safe_x_max = self.screen_width - sprite_width // 2
             safe_y_min = sprite_height // 2
-            safe_y_max = self.height - sprite_height // 2
+            safe_y_max = self.screen_height - sprite_height // 2
 
         # Check if position is within safe area
         is_within_safe_area = (
@@ -167,8 +190,8 @@ class MapView:
         else:
             # If no map is available, use the MapView dimensions
             is_within_map = (
-                sprite_width // 2 <= adjusted_pos[0] <= self.width - sprite_width // 2
-                and sprite_height // 2 <= adjusted_pos[1] <= self.height - sprite_height // 2
+                sprite_width // 2 <= adjusted_pos[0] <= self.screen_width - sprite_width // 2
+                and sprite_height // 2 <= adjusted_pos[1] <= self.screen_height - sprite_height // 2
             )
 
         # Calculate coordinates relative to map's upper left corner (which is now at 0,0)
@@ -213,6 +236,9 @@ class MapView:
         """
         Draw the map view on the screen.
         """
+        if not self.visible:
+            return
+
         for element_name, element in self.map_elements.items():
             # Only draw flags in high resolution view
             if self.current_view != 0 and isinstance(element, Flag):
@@ -220,4 +246,4 @@ class MapView:
 
             # Use the RendererFactory to render the element
             # image_x and image_y are now 0, representing the origin of the upper-left corner of the view
-            RendererFactory.render(self.screen, element, self.x, self.y, self.current_view)
+            RendererFactory.render(self.screen, element, self.position[0], self.position[1], self.current_view)
