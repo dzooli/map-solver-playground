@@ -2,16 +2,13 @@
 MapView component for displaying and managing map render in the application.
 """
 
-from typing import List, Tuple, Optional, Dict
+from typing import Tuple, Optional, Dict
 
 import pygame
 
-from map_solver_playground.map.render.pygame_renderer import MapRenderer
-from map_solver_playground.map.types import MapElement, Flag, GeoPath, Terrain
-from map_solver_playground.map.generator import MapGenerator, DiamondSquareGenerator
-from map_solver_playground.map.render.element import FlagRenderer, GeoPathRenderer
-from map_solver_playground.map.render.element.renderer_factory import RendererFactory
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.render.element.renderer_factory import RendererFactory
+from map_solver_playground.map.types import MapElement, Flag, Terrain
 
 MAP_SIZE = 500
 BLOCKS = 10
@@ -64,31 +61,8 @@ class MapView:
         # Add the terrain element to the map view
         self.add_element(TERRAIN_ELEMENT_NAME, terrain)
 
-        # Create initial map
-        self.create_maps(self.colormap)
-        self._center_image()
-
-    def create_maps(
-        self,
-        colors: TerrainColorGradient,
-        generator: Optional[MapGenerator] = None,
-    ) -> None:
-        """
-        Create and render map with the specified color gradient.
-
-        Args:
-            :param colors: The color gradient to use for map render
-            :param generator: The map generator to use for map generation, defaults to DiamondSquareGenerator
-        """
-        if colors is None:
-            raise ValueError("Color map must be provided")
-
-        # Get the terrain element and create maps
-        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
-        terrain.create_maps(colors, generator)
-
-        # Set the current image to the terrain's map image
-        self.image = terrain.map_image
+        # Initialize image
+        self.image = None
 
     def switch_view(self) -> str:
         """
@@ -114,8 +88,13 @@ class MapView:
         """
         Center the current image on the screen.
         """
-        self.image_x = self.width // 2 - self.image.get_width() // 2
-        self.image_y = self.height // 2 - self.image.get_height() // 2
+        if self.image is None:
+            # Set default values for image position when image is not available yet
+            self.image_x = self.width // 2
+            self.image_y = self.height // 2
+        else:
+            self.image_x = self.width // 2 - self.image.get_width() // 2
+            self.image_y = self.height // 2 - self.image.get_height() // 2
 
     def get_map_info(self) -> str:
         """
@@ -157,6 +136,11 @@ class MapView:
                 rel_x: The x-coordinate relative to the map's upper left corner
                 rel_y: The y-coordinate relative to the map's upper left corner
         """
+        # Check if the image is available
+        if self.image is None:
+            # Return default values when image is not available
+            return False, False, 0, 0
+
         # Check if the click is within map boundaries
         map_width, map_height = self.image.get_width(), self.image.get_height()
 

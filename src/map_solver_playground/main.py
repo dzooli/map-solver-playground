@@ -3,13 +3,13 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
-from typing import Dict, Any, cast
+from typing import Dict, Any, cast, Optional
 
 import pygame
 
 from map_solver_playground.asset_loader import load_image_with_transparency
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
-from map_solver_playground.map.generator import MapGeneratorFactory
+from map_solver_playground.map.generator import MapGeneratorFactory, MapGenerator
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.map.types import Terrain, GeoPath, Flag
@@ -65,12 +65,7 @@ class MapSolverApp:
         self.colormap: TerrainColorGradient = ColorGradient.TOPO_COLORS if colormap is None else colormap
 
         # Initialize the terrain
-        terrain = Terrain(
-            visible=True,
-            map_size=map_size,
-            block_size=block_size,
-            colormap=self.colormap
-        )
+        terrain = Terrain(visible=True, map_size=map_size, block_size=block_size, colormap=self.colormap)
 
         # Create the map view component
         self.map_view = MapView(self.screen, self.width, self.height, terrain, map_size, block_size, self.colormap)
@@ -107,6 +102,9 @@ class MapSolverApp:
         self.path = None
         self.path_visible = True
 
+        # Create initial map
+        self.create_maps(self.colormap)
+
     @measure_time(logger_instance=logger)
     def load_resources(self) -> None:
         """Load resources like images and sounds"""
@@ -122,9 +120,27 @@ class MapSolverApp:
         green_flag.image = self.resources["img_greenflag001"]
 
     @measure_time(logger_instance=logger)
-    def create_maps(self, colors: TerrainColorGradient = None):
-        """Create new map using the map view component"""
-        self.map_view.create_maps(self.colormap if colors is None else colors)
+    def create_maps(self, colors: TerrainColorGradient = None, generator: Optional[MapGenerator] = None):
+        """
+        Create and render map with the specified color gradient.
+
+        Args:
+            colors: The color gradient to use for map render, defaults to self.colormap
+            generator: The map generator to use for map generation
+        """
+        # Use the current colormap if none is provided
+        colors_to_use = self.colormap if colors is None else colors
+
+        if colors_to_use is None:
+            raise ValueError("Color map must be provided")
+
+        # Get the terrain element and create maps
+        terrain = self.map_view.get_element("terrain")
+        terrain.create_maps(colors_to_use, generator)
+
+        # Set the current image to the terrain's map image
+        self.map_view.image = terrain.map_image
+        self.map_view._center_image()
 
     @measure_time(logger_instance=logger)
     def solve_path(self, solver: MapSolver = None) -> None:
@@ -240,7 +256,7 @@ class MapSolverApp:
 
                 # Update properties for backward compatibility
                 self.path_visible = True
-                self.status_bar.set_text(f"Path solved using {DEFAULT_SOLVER}")
+                self.status_bar.set_text(f"Path solved using {solver.__class__.__name__}")
             else:
                 self.status_bar.set_text("No path found between the flags")
         except Exception as e:
