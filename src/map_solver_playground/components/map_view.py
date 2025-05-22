@@ -15,6 +15,7 @@ from map_solver_playground.map.render.color_maps import ColorGradient, TerrainCo
 
 MAP_SIZE = 500
 BLOCKS = 10
+TERRAIN_ELEMENT_NAME = "terrain"
 
 
 class MapView:
@@ -46,21 +47,6 @@ class MapView:
         self.width: int = width
         self.height: int = height
 
-        # Map properties
-        self.map_width: int = map_size
-        self.map_height: int = map_size
-        self.block_size: int = block_size
-        self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
-
-        # Map data and images
-        self.map_generator: Optional[MapGenerator] = None
-        self.map_grayscale: Optional[pygame.Surface] = None
-        self.map_image: Optional[pygame.Surface] = None
-        self.small_map_generator: Optional[MapGenerator] = None
-        self.small_map_grayscale: Optional[pygame.Surface] = None
-        self.small_map_colored: Optional[pygame.Surface] = None
-        self.small_map_image: Optional[pygame.Surface] = None
-
         # Current view state
         self.current_view: int = 0  # 0 = original map, 1 = small map
         self.image_x: int = 0
@@ -69,6 +55,18 @@ class MapView:
 
         # Map elements
         self.map_elements: Dict[str, MapElement] = {}
+
+        # Create terrain element
+        self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
+        terrain = Terrain(
+            visible=True,
+            map_size=map_size,
+            block_size=block_size,
+            colormap=self.colormap
+        )
+        # Initialize the terrain's current view to match the MapView's current view
+        terrain.current_view = self.current_view
+        self.add_element(TERRAIN_ELEMENT_NAME, terrain)
 
         # Create initial map
         self.create_maps(self.colormap)
@@ -89,28 +87,12 @@ class MapView:
         if colors is None:
             raise ValueError("Color map must be provided")
 
-        # Create a map generator and generate a map
-        self.map_width = self.map_height = MAP_SIZE
-        self.map_generator = (
-            generator
-            if isinstance(generator, MapGenerator)
-            else DiamondSquareGenerator(self.map_width, self.map_height)
-        )
-        self.map_generator.generate_map()
-        self.map_grayscale = MapRenderer.to_pygame_image(self.map_generator.map)
-        # Apply color mapping to the grayscale image
-        self.map_image = MapRenderer.color_map(self.map_grayscale, colors)
+        # Get the terrain element and create maps
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+        terrain.create_maps(colors, generator)
 
-        # Generate a smaller version of the map
-        self.block_size = MAP_SIZE // BLOCKS
-        self.small_map_generator = self.map_generator.generate_small_map(self.block_size)
-        self.small_map_grayscale = MapRenderer.to_pygame_image(self.small_map_generator.map)
-        # Apply color mapping to the small grayscale image
-        self.small_map_colored = MapRenderer.color_map(self.small_map_grayscale, colors)
-
-        # Scale the small map to the original map's size for better visibility
-        self.small_map_image = MapRenderer.scale(self.small_map_colored, self.map_width, self.map_height)
-        self.image = self.map_image
+        # Set the current image to the terrain's map image
+        self.image = terrain.map_image
 
     def switch_view(self) -> str:
         """
@@ -120,11 +102,16 @@ class MapView:
             str: A message describing the current view
         """
         self.current_view = 1 - self.current_view
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+
+        # Update the terrain's current view
+        terrain.current_view = self.current_view
+
         if self.current_view == 0:
-            self.image = self.map_image
+            self.image = terrain.map_image
             message = "Showing original"
         else:
-            self.image = self.small_map_image
+            self.image = terrain.small_map_image
             message = "Showing small map"
 
         self._center_image()
@@ -144,24 +131,19 @@ class MapView:
         Returns:
             str: Information about the current map view
         """
-        if self.current_view == 0:
-            return f"Original Map ({self.map_width}x{self.map_height}) with color mapping"
-        else:
-            small_width = self.map_width // self.block_size
-            small_height = self.map_height // self.block_size
-            return f"Small Map ({small_width}x{small_height}, block size: {self.block_size}) scaled to {self.map_width}x{self.map_height} with color mapping"
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+        return terrain.get_map_info(self.current_view)
 
     @property
     def map(self):
         """
-        Get the map object from the map generator.
+        Get the map object from the terrain element.
 
         Returns:
             Map: The map object
         """
-        if self.map_generator:
-            return self.map_generator.map
-        return None
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+        return terrain.map
 
     def is_within_safe_area(
         self, pos: Tuple[int, int], sprite_width: int, sprite_height: int
@@ -263,9 +245,6 @@ class MapView:
         """
         Draw the map view on the screen.
         """
-        # Draw the image
-        self.screen.blit(self.image, (self.image_x, self.image_y))
-
         # Draw a border around the map
         pygame.draw.rect(
             self.screen,

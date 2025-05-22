@@ -30,13 +30,21 @@ class TerrainRenderer:
             image_x: The x-coordinate of the map's upper left corner
             image_y: The y-coordinate of the map's upper left corner
         """
-        # Skip rendering if the terrain is not visible or has no map data
-        if not terrain.visible or terrain.map_data is None:
+        # Skip rendering if the terrain is not visible
+        if not terrain.visible:
             return
 
-        map_data = terrain.map_data
-        terrain_surface = TerrainRenderer._create_terrain_surface(map_data)
-        screen.blit(terrain_surface, (image_x, image_y))
+        # Use the appropriate image based on the current view
+        if terrain.current_view == 0:
+            # Original map view
+            if terrain.map_image is None:
+                return
+            screen.blit(terrain.map_image, (image_x, image_y))
+        else:
+            # Small map view
+            if terrain.small_map_image is None:
+                return
+            screen.blit(terrain.small_map_image, (image_x, image_y))
 
     @staticmethod
     def _normalize_height_data(height_data):
