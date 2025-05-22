@@ -3,9 +3,10 @@ Widget component serving as a base class for all UI components.
 """
 
 import pygame
+from abc import ABC, abstractmethod
 
 
-class Widget:
+class Widget(ABC):
     """
     A base UI component for all widgets in the application.
     This serves as a parent class for TextPanel, MapView, and other UI components.
@@ -42,10 +43,10 @@ class Widget:
         """
         self.visible = not self.visible
 
+    @abstractmethod
     def draw(self):
         """
         Draw the widget on the screen.
-        This method should be overridden by subclasses.
+        This method must be implemented by subclasses.
         """
-        if not self.visible:
-            return
+        pass
