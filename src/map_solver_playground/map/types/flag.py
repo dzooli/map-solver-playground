@@ -2,9 +2,7 @@
 Flag map element class.
 """
 
-from typing import Optional, Tuple
-
-import pygame
+from typing import Optional, Tuple, Any
 
 from map_solver_playground.map.types.map_element import MapElement
 
@@ -17,7 +15,7 @@ class Flag(MapElement):
     def __init__(
         self,
         position: Optional[Tuple[int, int]] = None,
-        image: Optional[pygame.Surface] = None,
+        image: Optional[Any] = None,
         flag_type: str = "default",
         visible: bool = True,
     ) -> None:
@@ -56,17 +54,17 @@ class Flag(MapElement):
         self._position = value
 
     @property
-    def image(self) -> Optional[pygame.Surface]:
+    def image(self) -> Optional[Any]:
         """
         Get the image of the flag.
 
         Returns:
-            Optional[pygame.Surface]: The flag image, or None if not set
+            Optional[Any]: The flag image, or None if not set
         """
         return self._image
 
     @image.setter
-    def image(self, value: Optional[pygame.Surface]) -> None:
+    def image(self, value: Optional[Any]) -> None:
         """
         Set the image of the flag.
 

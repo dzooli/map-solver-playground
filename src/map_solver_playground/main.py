@@ -3,10 +3,11 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
-import pygame
 from typing import Dict, Any, cast, Optional
 
-from map_solver_playground.asset_loader import load_image_with_transparency
+# Import backend-independent utilities
+from map_solver_playground.asset_loader.backend_independent_image_loader import load_image_with_transparency
+from map_solver_playground.map.render.color_utils import get_color
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.generator import MapGeneratorFactory, MapGenerator
@@ -155,9 +156,12 @@ class MapSolverApp:
         if colors_to_use is None:
             raise ValueError("Color map must be provided")
 
-        # Get the terrain element and create maps
+        # Get the current renderer backend
+        current_backend = RendererFactory.get_current_backend()
+
+        # Get the terrain element and create maps with the current backend
         terrain = self.map_view.get_element("terrain")
-        terrain.create_maps(colors_to_use, generator)
+        terrain.create_maps(colors_to_use, generator, current_backend)
 
         # Set the view to show the original map
         self.map_view.set_view(0)
@@ -293,7 +297,7 @@ class MapSolverApp:
                 # Get the geo path element and update its properties
                 geo_path = self.map_view.get_element("geo_path")
                 geo_path.path_points = self.path
-                geo_path.color = pygame.color.THECOLORS["blue"][:3]  # Convert RGBA to RGB
+                geo_path.color = get_color("blue")  # Use backend-independent color utility
                 geo_path.visible = True
 
                 # Update properties for backward compatibility

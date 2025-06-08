@@ -9,20 +9,39 @@ from map_solver_playground.map.render.element.element_renderer_interfaces import
     BaseGeoPathRenderer,
     BaseTerrainRenderer,
 )
-from map_solver_playground.map.render.element.pygame_element_renderers import (
-    PygameFlagRenderer,
-    PygameGeoPathRenderer,
-    PygameTerrainRenderer,
-)
 from map_solver_playground.map.render.renderer_backend import RendererBackend
 
+# Try to import Pygame renderers if available
+PYGAME_AVAILABLE = False
+try:
+    from map_solver_playground.map.render.element.pygame_element_renderers import (
+        PygameFlagRenderer,
+        PygameGeoPathRenderer,
+        PygameTerrainRenderer,
+    )
+
+    PYGAME_AVAILABLE = True
+except ImportError:
+    # Define placeholder classes for Pygame renderers
+    class PygameFlagRenderer(BaseFlagRenderer):
+        pass
+
+    class PygameGeoPathRenderer(BaseGeoPathRenderer):
+        pass
+
+    class PygameTerrainRenderer(BaseTerrainRenderer):
+        pass
+
+
 # Try to import SDL2 renderers if available
+SDL2_AVAILABLE = False
 try:
     from map_solver_playground.map.render.element.sdl2_element_renderers import (
         SDL2FlagRenderer,
         SDL2GeoPathRenderer,
         SDL2TerrainRenderer,
     )
+
     SDL2_AVAILABLE = True
 except ImportError:
     # Define placeholder classes for SDL2 renderers
@@ -34,8 +53,6 @@ except ImportError:
 
     class SDL2TerrainRenderer(BaseTerrainRenderer):
         pass
-
-    SDL2_AVAILABLE = False
 
 
 class ElementRendererFactory:

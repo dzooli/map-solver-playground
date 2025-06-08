@@ -350,3 +350,18 @@ class BaseRenderer(ABC):
             The key name
         """
         pass
+
+    @staticmethod
+    @abstractmethod
+    def load_image(image_path: str, target_size: Tuple[int, int] = None) -> Any:
+        """
+        Load an image from a file path.
+
+        Args:
+            image_path: The path to the image file
+            target_size: Optional tuple of (width, height) to resize the image
+
+        Returns:
+            An image object compatible with the renderer
+        """
+        pass

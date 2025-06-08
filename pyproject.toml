@@ -21,13 +21,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
-    "pygame>=2.5.0",
     "numpy>=1.24.0",
     "scipy==1.15.3",
     "networkx==3.4.2",
     "networkx-astar-path>=1.0.1",
     "pydantic>=2.0.0",
-    "pysdl2==0.9.17",
+    "pillow>=11.2.1",
+    "pysdl2-dll>=2.32.0",
+    "pygame>=2.6.1",
+    "pysdl2>=0.9.17",
 ]
 
 [project.urls]

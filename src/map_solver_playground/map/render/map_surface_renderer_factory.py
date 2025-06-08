@@ -6,9 +6,19 @@ from typing import Dict, Type
 
 from map_solver_playground.map.render.renderer_backend import RendererBackend
 from map_solver_playground.map.render.map_surface_renderer_interfaces import BaseMapSurfaceRenderer
-from map_solver_playground.map.render.pygame_map_surface_renderer import PygameMapSurfaceRenderer
+
+# Try to import Pygame renderer if available
+PYGAME_AVAILABLE = False
+try:
+    from map_solver_playground.map.render.pygame_map_surface_renderer import PygameMapSurfaceRenderer
+    PYGAME_AVAILABLE = True
+except ImportError:
+    # Define a placeholder class for Pygame renderer
+    class PygameMapSurfaceRenderer(BaseMapSurfaceRenderer):
+        pass
 
 # Try to import SDL2 renderer if available
+SDL2_AVAILABLE = False
 try:
     from map_solver_playground.map.render.sdl2_map_surface_renderer import SDL2MapSurfaceRenderer
     SDL2_AVAILABLE = True
@@ -16,7 +26,6 @@ except ImportError:
     # Define a placeholder class for SDL2 renderer
     class SDL2MapSurfaceRenderer(BaseMapSurfaceRenderer):
         pass
-    SDL2_AVAILABLE = False
 
 
 class MapSurfaceRendererFactory:

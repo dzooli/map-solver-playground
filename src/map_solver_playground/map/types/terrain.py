@@ -2,10 +2,9 @@
 Terrain map element class.
 """
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 
 import numpy as np
-import pygame
 
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.map_data import Map
@@ -49,12 +48,12 @@ class Terrain(MapElement):
 
         # Map data and images
         self.map_generator: Optional[MapGenerator] = None
-        self.map_grayscale: Optional[pygame.Surface] = None
-        self.map_image: Optional[pygame.Surface] = None
+        self.map_grayscale: Optional[Any] = None
+        self.map_image: Optional[Any] = None
         self.small_map_generator: Optional[MapGenerator] = None
-        self.small_map_grayscale: Optional[pygame.Surface] = None
-        self.small_map_colored: Optional[pygame.Surface] = None
-        self.small_map_image: Optional[pygame.Surface] = None
+        self.small_map_grayscale: Optional[Any] = None
+        self.small_map_colored: Optional[Any] = None
+        self.small_map_image: Optional[Any] = None
 
     def create_maps(
         self,

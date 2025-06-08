@@ -353,3 +353,70 @@ class PygameRenderer(BaseRenderer):
             pygame.K_t: "t",
         }
         return key_map.get(key, "")
+
+    @staticmethod
+    def load_image(image_path: str, target_size: Tuple[int, int] = None) -> pygame.Surface:
+        """
+        Load an image from a file path using Pygame.
+
+        Args:
+            image_path: The path to the image file
+            target_size: Optional tuple of (width, height) to resize the image
+
+        Returns:
+            A Pygame surface with the loaded image
+        """
+        # Load the image
+        image = pygame.image.load(image_path)
+
+        # Resize if needed
+        if target_size:
+            image = pygame.transform.scale(image, target_size)
+
+        # Get color of top-left pixel for transparency
+        transparent_color = image.get_at((0, 0))
+
+        # Set that color as transparent
+        image.set_colorkey(transparent_color)
+
+        return image
+
+    @staticmethod
+    def get_image_width(image: pygame.Surface) -> int:
+        """
+        Get the width of an image.
+
+        Args:
+            image: The pygame surface to get the width for
+
+        Returns:
+            The width of the image
+        """
+        return image.get_width()
+
+    @staticmethod
+    def get_image_height(image: pygame.Surface) -> int:
+        """
+        Get the height of an image.
+
+        Args:
+            image: The pygame surface to get the height for
+
+        Returns:
+            The height of the image
+        """
+        return image.get_height()
+
+    @staticmethod
+    def scale_image(image: pygame.Surface, size: Tuple[int, int]) -> pygame.Surface:
+        """
+        Scale an image to the specified size.
+
+        Args:
+            image: The pygame surface to scale
+            size: The target size (width, height)
+
+        Returns:
+            The scaled image
+        """
+        return pygame.transform.scale(image, size)
