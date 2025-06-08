@@ -13,7 +13,8 @@ from map_solver_playground.map.types.map_element import MapElement
 from map_solver_playground.map.generator import MapGenerator
 from map_solver_playground.map.generator.diamond_square import DiamondSquareGenerator
 from map_solver_playground.map.render.color_maps import TerrainColorGradient
-from map_solver_playground.map.render.pygame_renderer import MapRenderer
+from map_solver_playground.map.render.renderer_backend import RendererBackend
+from map_solver_playground.map.render.map_surface_renderer_factory import MapSurfaceRendererFactory
 
 
 class Terrain(MapElement):
@@ -59,6 +60,7 @@ class Terrain(MapElement):
         self,
         colors: TerrainColorGradient,
         generator: Optional[MapGenerator] = None,
+        backend: RendererBackend = RendererBackend.PYGAME,
     ) -> None:
         """
         Create and render map with the specified color gradient.
@@ -66,9 +68,13 @@ class Terrain(MapElement):
         Args:
             :param colors: The color gradient to use for map render
             :param generator: The map generator to use for map generation, defaults to DiamondSquareGenerator
+            :param backend: The renderer backend to use, defaults to PYGAME
         """
         if colors is None:
             raise ValueError("Color map must be provided")
+
+        # Get the appropriate map surface renderer for the current backend
+        renderer_class = MapSurfaceRendererFactory.get_map_surface_renderer(backend)
 
         # Create a map generator and generate a map
         # Use the instance variables map_width and map_height (already set in __init__)
@@ -78,19 +84,19 @@ class Terrain(MapElement):
             else DiamondSquareGenerator(self.map_width, self.map_height)
         )
         self.map_generator.generate_map()
-        self.map_grayscale = MapRenderer.to_pygame_image(self.map_generator.map)
+        self.map_grayscale = renderer_class.to_surface(self.map_generator.map)
         # Apply color mapping to the grayscale image
-        self.map_image = MapRenderer.color_map(self.map_grayscale, colors)
+        self.map_image = renderer_class.color_map(self.map_grayscale, colors)
 
         # Generate a smaller version of the map
         self.block_size = self.map_width // DEFAULT_BLOCKS
         self.small_map_generator = self.map_generator.generate_small_map(self.block_size)
-        self.small_map_grayscale = MapRenderer.to_pygame_image(self.small_map_generator.map)
+        self.small_map_grayscale = renderer_class.to_surface(self.small_map_generator.map)
         # Apply color mapping to the small grayscale image
-        self.small_map_colored = MapRenderer.color_map(self.small_map_grayscale, colors)
+        self.small_map_colored = renderer_class.color_map(self.small_map_grayscale, colors)
 
         # Scale the small map to the original map's size for better visibility
-        self.small_map_image = MapRenderer.scale(self.small_map_colored, self.map_width, self.map_height)
+        self.small_map_image = renderer_class.scale(self.small_map_colored, self.map_width, self.map_height)
 
         # Update the map_data property
         self._map_data = self.map_generator.map

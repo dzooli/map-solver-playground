@@ -2,9 +2,7 @@
 TextPanel component serving as a base class for text-based UI components.
 """
 
-from typing import List
-
-import pygame
+from typing import List, Tuple
 
 from map_solver_playground.components.widget import Widget
 
@@ -17,7 +15,7 @@ class TextPanel(Widget):
 
     def __init__(
         self,
-        screen,
+        renderer,
         screen_width,
         screen_height,
         font,
@@ -29,17 +27,18 @@ class TextPanel(Widget):
         Initialize the text panel component.
 
         Args:
-            screen: The pygame screen to draw on
+            renderer: The renderer to use for drawing
             screen_width: The width of the screen
             screen_height: The height of the screen
             font: The font to use for text
             position: The position of the panel (x, y)
             size: The size of the panel (width, height)
+            color: The color to use for text
         """
-        super().__init__(screen, screen_width, screen_height, position, size)
+        super().__init__(renderer, screen_width, screen_height, position, size)
         self.font = font
         self._text: str | List[str] = ""
-        self.color = color if color is not None else pygame.color.THECOLORS["white"]
+        self.color = color if color is not None else (255, 255, 255)  # White
 
     def set_text(self, text):
         """
@@ -54,14 +53,20 @@ class TextPanel(Widget):
             raise TypeError("Text must be a string")
         self._text = text
 
-
     def _draw_background(self):
         """
         Draw the panel background.
         """
-        panel_rect = pygame.Rect(self.position[0], self.position[1], self.size[0], self.size[1])
-        pygame.draw.rect(self.screen, pygame.color.THECOLORS["darkgray"], panel_rect)
-        pygame.draw.rect(self.screen, pygame.color.THECOLORS["black"], panel_rect, 1)
+        panel_rect = (self.position[0], self.position[1], self.size[0], self.size[1])
+
+        # Use the renderer's static drawing functions
+        # The renderer class has static methods for drawing, not instance methods
+        from map_solver_playground.map.render.element.renderer_factory import RendererFactory
+        renderer_class = RendererFactory.get_current_renderer()
+
+        # Use the static methods of the renderer class
+        renderer_class.fill_rect(self.renderer, panel_rect, (64, 64, 64))  # Dark gray
+        renderer_class.draw_rect(self.renderer, panel_rect, (0, 0, 0), 1)  # Black outline
 
     def draw(self):
         """
