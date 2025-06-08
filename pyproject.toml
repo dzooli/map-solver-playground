@@ -29,24 +29,13 @@ dependencies = [
     "pydantic>=2.0.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "black>=25.1.0",
-]
-test = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.14.0",
-    "pytest-xdist>=3.6.1",
-]
-
-
 [project.urls]
 "Homepage" = "https://github.com/dzooli/map-solver-playground"
 "Bug Tracker" = "https://github.com/dzooli/map-solver-playground/issues"
 
 [project.scripts]
 map-solver = "map_solver_playground.main:main"
+map-solver-perftest = "map_solver_playground.tests.performance.test_mapview_performance:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -59,6 +48,16 @@ line-length = 120
 target-version = ["py312"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["src/map_solver_playground/tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=map_solver_playground --cov-report=term-missing --cov-report=lcov"
+markers = ['performance']
+#addopts = "-v --cov=map_solver_playground --cov-report=term-missing --cov-report=lcov -k 'not performance'"
+addopts = "-v -k 'not performance'"
+
+[dependency-groups]
+dev = [
+    "black[d]>=25.1.0",
+    "pytest-cov>=6.1.1",
+    "pytest-mock>=3.14.0",
+    "pytest-xdist>=3.6.1",
+]
