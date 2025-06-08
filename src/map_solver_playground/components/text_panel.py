@@ -6,8 +6,10 @@ from typing import List
 
 import pygame
 
+from map_solver_playground.components.widget import Widget
 
-class TextPanel:
+
+class TextPanel(Widget):
     """
     A base UI component for displaying text on the screen.
     This serves as a parent class for InfoPanel, StatusBar, and ToolTipPanel.
@@ -16,8 +18,8 @@ class TextPanel:
     def __init__(
         self,
         screen,
-        width,
-        height,
+        screen_width,
+        screen_height,
         font,
         position=(0, 0),
         size=(100, 100),
@@ -28,20 +30,15 @@ class TextPanel:
 
         Args:
             screen: The pygame screen to draw on
-            width: The width of the screen
-            height: The height of the screen
+            screen_width: The width of the screen
+            screen_height: The height of the screen
             font: The font to use for text
             position: The position of the panel (x, y)
             size: The size of the panel (width, height)
         """
-        self.screen = screen
-        self.width = width
-        self.height = height
+        super().__init__(screen, screen_width, screen_height, position, size)
         self.font = font
-        self.position = position
-        self.size = size
-        self.visible = True
-        self.text: str | List[str] = ""
+        self._text: str | List[str] = ""
         self.color = color if color is not None else pygame.color.THECOLORS["white"]
 
     def set_text(self, text):
@@ -51,13 +48,12 @@ class TextPanel:
         Args:
             text: The text to display
         """
-        self.text = text
+        if text is None:
+            raise ValueError("Text cannot be None")
+        if not isinstance(text, str):
+            raise TypeError("Text must be a string")
+        self._text = text
 
-    def toggle_visibility(self):
-        """
-        Toggle the visibility of the panel.
-        """
-        self.visible = not self.visible
 
     def _draw_background(self):
         """

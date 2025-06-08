@@ -1,104 +1,94 @@
 """
-MapView component for displaying and managing map visualization in the application.
+MapView component for displaying and managing map render in the application.
 """
+
+from typing import Tuple, Optional, Dict
 
 import pygame
 
-from map_solver_playground.maps.generators import MapGenerator
-from map_solver_playground.maps.generators.diamond_square import DiamondSquareGenerator
-from map_solver_playground.maps.visualization.color_maps import ColorGradient
-from map_solver_playground.maps.visualization.pygame_renderer import MapRenderer
+from map_solver_playground.components.widget import Widget
+from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
+from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.render.element.renderer_factory import RendererFactory
+from map_solver_playground.map.types import MapElement, Flag, Terrain
 
-MAP_SIZE = 500
-BLOCKS = 10
+TERRAIN_ELEMENT_NAME = "terrain"
 
 
-class MapView:
+class MapView(Widget):
     """
-    A UI component that handles the visualization and management of maps.
+    A UI component that handles the render and management of map.
     """
 
-    def __init__(self, screen, width, height, map_size=MAP_SIZE, block_size=30, colormap=None):
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        screen_width: int,
+        screen_height: int,
+        terrain: Terrain,
+        map_size: int = DEFAULT_MAP_SIZE,
+        block_size: int = 30,
+        colormap: Optional[TerrainColorGradient] = None,
+        x: int = 0,
+        y: int = 0,
+    ) -> None:
         """
         Initialize the map view component.
 
         Args:
             screen: The pygame screen to draw on
-            width: The width of the screen
-            height: The height of the screen
+            screen_width: The width of the screen
+            screen_height: The height of the screen
+            terrain: The terrain element to use
             map_size: The size of the map (width and height)
             block_size: The size of blocks for the small map
-            colormap: The color gradient to use for map visualization
+            colormap: The color gradient to use for map render
+            x: The x-coordinate of the MapView's position on the screen
+            y: The y-coordinate of the MapView's position on the screen
         """
-        self.screen = screen
-        self.width = width
-        self.height = height
+        position = (x, y)
+        size = (screen_width, screen_height)  # Using screen dimensions as default size
+        super().__init__(screen, screen_width, screen_height, position, size)
 
-        # Map properties
-        self.map_width = self.map_height = map_size
-        self.block_size = block_size
-        self.colormap = colormap if colormap else ColorGradient.UNDEFINED
-
-        # Map data and images
-        self.map_generator: MapGenerator | None = None
-        self.map_grayscale = self.map_image = None
-        self.small_map_generator: MapGenerator | None = None
-        self.small_map_grayscale = self.small_map_colored = self.small_map_image = None
+        # For backward compatibility, maintain x and y properties
+        self._x: int = x
+        self._y: int = y
 
         # Current view state
-        self.current_view = 0  # 0 = original map, 1 = small map
-        self.image_x = self.image_y = 0
-        self.image = None
+        self.current_view: int = 0  # 0 = original map, 1 = small map
 
-        # Flag positions and resources
-        self.red_flag_pos = None
-        self.green_flag_pos = None
-        self.red_flag_img = None
-        self.green_flag_img = None
+        # Map elements
+        self.map_elements: Dict[str, MapElement] = {}
 
-        # Create initial maps
-        self.create_maps(self.colormap)
-        self._center_image()
+        # Store the colormap
+        self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
 
-    def create_maps(
-        self,
-        colors,
-        generator: MapGenerator = None,
-    ):
-        """
-        Create and render maps with the specified color gradient.
+        # Add the terrain element to the map view
+        self.add_element(TERRAIN_ELEMENT_NAME, terrain)
 
-        Args:
-            :param colors: The color gradient to use for map visualization
-            :param generator: The map generator to use for map generation, defaults to DiamondSquareGenerator
-        """
-        if colors is None:
-            raise ValueError("Color map must be provided")
+    @property
+    def x(self) -> int:
+        """Get the x-coordinate of the MapView's position."""
+        return self.position[0]
 
-        # Create a map generator and generate a map
-        self.map_width = self.map_height = MAP_SIZE
-        self.map_generator = (
-            generator
-            if isinstance(generator, MapGenerator)
-            else DiamondSquareGenerator(self.map_width, self.map_height)
-        )
-        self.map_generator.generate_map()
-        self.map_grayscale = MapRenderer.to_pygame_image(self.map_generator.map)
-        # Apply color mapping to the grayscale image
-        self.map_image = MapRenderer.color_map(self.map_grayscale, colors)
+    @x.setter
+    def x(self, value: int) -> None:
+        """Set the x-coordinate of the MapView's position."""
+        self._x = value
+        self.position = (value, self.position[1])
 
-        # Generate a smaller version of the map
-        self.block_size = MAP_SIZE // BLOCKS
-        self.small_map_generator = self.map_generator.generate_small_map(self.block_size)
-        self.small_map_grayscale = MapRenderer.to_pygame_image(self.small_map_generator.map)
-        # Apply color mapping to the small grayscale image
-        self.small_map_colored = MapRenderer.color_map(self.small_map_grayscale, colors)
+    @property
+    def y(self) -> int:
+        """Get the y-coordinate of the MapView's position."""
+        return self.position[1]
 
-        # Scale the small map to the original map's size for better visibility
-        self.small_map_image = MapRenderer.scale(self.small_map_colored, self.map_width, self.map_height)
-        self.image = self.map_image
+    @y.setter
+    def y(self, value: int) -> None:
+        """Set the y-coordinate of the MapView's position."""
+        self._y = value
+        self.position = (self.position[0], value)
 
-    def switch_view(self):
+    def switch_view(self) -> str:
         """
         Switch between original and small map views.
 
@@ -106,37 +96,48 @@ class MapView:
             str: A message describing the current view
         """
         self.current_view = 1 - self.current_view
+
         if self.current_view == 0:
-            self.image = self.map_image
             message = "Showing original"
         else:
-            self.image = self.small_map_image
             message = "Showing small map"
-        self._center_image()
+
         return message
 
-    def _center_image(self):
+    def set_view(self, view_index: int) -> None:
         """
-        Center the current image on the screen.
-        """
-        self.image_x = self.width // 2 - self.image.get_width() // 2
-        self.image_y = self.height // 2 - self.image.get_height() // 2
+        Set the current view to the specified index.
 
-    def get_map_info(self):
+        Args:
+            view_index: The view index to set (0 for original, 1 for small map)
+        """
+        if view_index in (0, 1):
+            self.current_view = view_index
+
+    def get_map_info(self) -> str:
         """
         Get information about the current map view.
 
         Returns:
             str: Information about the current map view
         """
-        if self.current_view == 0:
-            return f"Original Map ({self.map_width}x{self.map_height}) with color mapping"
-        else:
-            small_width = self.map_width // self.block_size
-            small_height = self.map_height // self.block_size
-            return f"Small Map ({small_width}x{small_height}, block size: {self.block_size}) scaled to {self.map_width}x{self.map_height} with color mapping"
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+        return terrain.get_map_info(self.current_view)
 
-    def is_within_safe_area(self, pos, sprite_width, sprite_height):
+    @property
+    def map(self):
+        """
+        Get the map object from the terrain element.
+
+        Returns:
+            Map: The map object
+        """
+        terrain = self.get_element(TERRAIN_ELEMENT_NAME)
+        return terrain.map
+
+    def is_within_safe_area(
+        self, pos: Tuple[int, int], sprite_width: int, sprite_height: int
+    ) -> Tuple[bool, bool, int, int]:
         """
         Check if the given position is within the safe area of the map.
         The safe area is defined as the area where a sprite can be placed without exceeding map boundaries.
@@ -153,103 +154,96 @@ class MapView:
                 rel_x: The x-coordinate relative to the map's upper left corner
                 rel_y: The y-coordinate relative to the map's upper left corner
         """
-        # Check if click is within map boundaries
-        map_width, map_height = self.image.get_width(), self.image.get_height()
+        # Adjust position to be relative to the MapView's position
+        adjusted_pos = (pos[0] - self.position[0], pos[1] - self.position[1])
 
         # Calculate the safe area where sprites can be placed without exceeding map boundaries
         # The sprite is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
-        safe_x_min = self.image_x + sprite_width // 2
-        safe_x_max = self.image_x + map_width - sprite_width // 2
-        safe_y_min = self.image_y + sprite_height // 2
-        safe_y_max = self.image_y + map_height - sprite_height // 2
+        if self.map is not None:
+            map_width = self.map.width
+            map_height = self.map.height
+            safe_x_min = sprite_width // 2
+            safe_x_max = map_width - sprite_width // 2
+            safe_y_min = sprite_height // 2
+            safe_y_max = map_height - sprite_height // 2
+        else:
+            # If no map is available, use the MapView dimensions
+            safe_x_min = sprite_width // 2
+            safe_x_max = self.screen_width - sprite_width // 2
+            safe_y_min = sprite_height // 2
+            safe_y_max = self.screen_height - sprite_height // 2
 
         # Check if position is within safe area
-        is_within_safe_area = safe_x_min <= pos[0] <= safe_x_max and safe_y_min <= pos[1] <= safe_y_max
-
-        # Check if position is within map boundaries
-        is_within_map = (
-            self.image_x <= pos[0] <= self.image_x + map_width and self.image_y <= pos[1] <= self.image_y + map_height
+        is_within_safe_area = (
+            safe_x_min <= adjusted_pos[0] <= safe_x_max and safe_y_min <= adjusted_pos[1] <= safe_y_max
         )
 
-        # Calculate coordinates relative to map's upper left corner
-        rel_x = pos[0] - self.image_x
-        rel_y = pos[1] - self.image_y
+        # Check if the position is within map boundaries
+        if self.map is not None:
+            map_width = self.map.width
+            map_height = self.map.height
+            # Account for sprite size to ensure it's fully within map boundaries
+            is_within_map = (
+                sprite_width // 2 <= adjusted_pos[0] <= map_width - sprite_width // 2
+                and sprite_height // 2 <= adjusted_pos[1] <= map_height - sprite_height // 2
+            )
+        else:
+            # If no map is available, use the MapView dimensions
+            is_within_map = (
+                sprite_width // 2 <= adjusted_pos[0] <= self.screen_width - sprite_width // 2
+                and sprite_height // 2 <= adjusted_pos[1] <= self.screen_height - sprite_height // 2
+            )
+
+        # Calculate coordinates relative to map's upper left corner (which is now at 0,0)
+        rel_x = adjusted_pos[0]
+        rel_y = adjusted_pos[1]
 
         return is_within_safe_area, is_within_map, rel_x, rel_y
 
-    def screen_to_map_pos(self, rel_pos, sprite_width, sprite_height):
+    def get_element(self, name: str) -> MapElement:
         """
-        Convert relative map position to screen position for sprite placement.
+        Get a map element by its name.
 
         Args:
-            rel_pos: The (x, y) position relative to the map's upper left corner
-            sprite_width: The width of the sprite
-            sprite_height: The height of the sprite
+            name: The name of the element to get
 
         Returns:
-            tuple: The (x, y) screen position for the sprite
-        """
-        if rel_pos is None:
-            return None
+            MapElement: The map element with the specified name
 
-        screen_x = self.image_x + rel_pos[0] - sprite_width // 2
-        screen_y = self.image_y + rel_pos[1] - sprite_height // 2
-        return screen_x, screen_y
-
-    def set_flag_images(self, red_flag_img, green_flag_img):
+        Raises:
+            ValueError: If no element with the specified name is found
         """
-        Set the flag images to be used for drawing.
+        if name in self.map_elements:
+            return self.map_elements[name]
+        raise ValueError(f"No element found with name: {name}")
+
+    def add_element(self, name: str, element: MapElement) -> None:
+        """
+        Add a map element to the map view.
 
         Args:
-            red_flag_img: The red flag image
-            green_flag_img: The green flag image
-        """
-        self.red_flag_img = red_flag_img
-        self.green_flag_img = green_flag_img
+            name: The name to associate with the element
+            element: The map element to add
 
-    def set_flag_positions(self, red_flag_pos, green_flag_pos):
+        Raises:
+            ValueError: If an element with the specified name already exists
         """
-        Set the positions of the flags.
+        if name in self.map_elements:
+            raise ValueError(f"An element with name '{name}' already exists")
+        self.map_elements[name] = element
 
-        Args:
-            red_flag_pos: The position of the red flag (x, y) relative to the map
-            green_flag_pos: The position of the green flag (x, y) relative to the map
-        """
-        self.red_flag_pos = red_flag_pos
-        self.green_flag_pos = green_flag_pos
-
-    def draw(self):
+    def draw(self) -> None:
         """
         Draw the map view on the screen.
         """
-        # Draw the image
-        self.screen.blit(self.image, (self.image_x, self.image_y))
+        if not self.visible:
+            return
 
-        # Draw a border around the map
-        pygame.draw.rect(
-            self.screen,
-            pygame.color.THECOLORS["black"],
-            (
-                self.image_x,
-                self.image_y,
-                self.image.get_width(),
-                self.image.get_height(),
-            ),
-            1,
-        )
+        for element_name, element in self.map_elements.items():
+            # Only draw flags in high resolution view
+            if self.current_view != 0 and isinstance(element, Flag):
+                continue
 
-        # Draw flags if in high resolution view and flag images are set
-        if self.current_view == 0 and self.red_flag_img and self.green_flag_img:
-            # Draw red flag if position is set
-            if self.red_flag_pos:
-                screen_pos = self.screen_to_map_pos(
-                    self.red_flag_pos, self.red_flag_img.get_width(), self.red_flag_img.get_height()
-                )
-                self.screen.blit(self.red_flag_img, screen_pos)
-
-            # Draw green flag if position is set
-            if self.green_flag_pos:
-                screen_pos = self.screen_to_map_pos(
-                    self.green_flag_pos, self.green_flag_img.get_width(), self.green_flag_img.get_height()
-                )
-                self.screen.blit(self.green_flag_img, screen_pos)
+            # Use the RendererFactory to render the element
+            # image_x and image_y are now 0, representing the origin of the upper-left corner of the view
+            RendererFactory.render(self.screen, element, self.position[0], self.position[1], self.current_view)
