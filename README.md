@@ -1,7 +1,7 @@
 # Map Solver Playground
 
 A Python application for generating, visualizing, and manipulating 2D map data. This project provides tools for creating
-terrain maps, applying filters, and visualizing the results using either Pygame or SDL2 as the rendering backend.
+terrain maps, applying filters, and visualizing the results using configurable rendering backends.
 
 ![Map Solver Playground Screenshot](screenshot.png)
 
