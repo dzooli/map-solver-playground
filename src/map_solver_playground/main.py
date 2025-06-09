@@ -72,7 +72,9 @@ class MapSolverApp:
         self.window, self.screen = renderer.create_window(self.width, self.height, "Map Generator Demo")
 
         # Create the font
-        self.font = renderer.create_font(size=24)
+        # Use a smaller font size for SDL2 backend to prevent text from going out of bounds
+        font_size = 16 if renderer_backend == RendererBackend.SDL2 else 24
+        self.font = renderer.create_font(size=font_size)
 
         # Use the global logger instead of storing a separate reference
         self._logger = logger
