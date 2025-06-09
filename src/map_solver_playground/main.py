@@ -5,13 +5,14 @@ This script creates a simple map viewer application with keyboard controls.
 import logging
 from typing import Dict, Any, cast, Optional
 
-import pygame
-
-from map_solver_playground.asset_loader import load_image_with_transparency
+# Import backend-independent utilities
+from map_solver_playground.asset_loader.backend_independent_image_loader import load_image_with_transparency
+from map_solver_playground.map.render.color_utils import get_color
 from map_solver_playground.components import StatusBar, InfoPanel, ToolTipPanel, MapView
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.generator import MapGeneratorFactory, MapGenerator
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
+from map_solver_playground.map.render.element.renderer_factory import RendererFactory, RendererBackend
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.map.types import Terrain, GeoPath, Flag
 from map_solver_playground.profile import measure_time
@@ -19,6 +20,11 @@ from map_solver_playground.profile import measure_time
 logger: logging.Logger = logging.getLogger("mapsolver")
 logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture the timing logs
 logger.propagate = False  # Prevent propagation to the root logger to avoid duplicate logs
+
+# Remove any existing handlers to avoid duplicate logging
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
+
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
@@ -39,6 +45,7 @@ class MapSolverApp:
         colormap: TerrainColorGradient = None,
         map_logger: logging.Logger = None,
         generator: str = "RecursiveDiamondSquareGenerator",
+        renderer_backend: RendererBackend = RendererBackend.PYGAME,
     ):
         self.tooltips = [
             "LMB to place a flag",
@@ -53,13 +60,23 @@ class MapSolverApp:
         self._generator_name = generator
         self.map_generator = MapGeneratorFactory.create(self._generator_name, width=map_size, height=map_size)
 
-        pygame.init()
-        self.width, self.height = width, height
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Map Generator Demo")
-        self.font = pygame.font.SysFont(None, 24)
+        # Set the renderer backend
+        RendererFactory.set_backend(renderer_backend)
 
-        self._logger: logging.Logger | None = map_logger
+        # Initialize the renderer
+        renderer = RendererFactory.get_current_renderer()
+        renderer.init()
+
+        self.width, self.height = width, height
+
+        # Create the window and screen/renderer
+        self.window, self.screen = renderer.create_window(self.width, self.height, "Map Generator Demo")
+
+        # Create the font
+        self.font = renderer.create_font(size=24)
+
+        # Use the global logger instead of storing a separate reference
+        self._logger = logger
 
         # Status bar for displaying messages
         self.status_bar = StatusBar(self.screen, self.width, self.height, self.font)
@@ -139,9 +156,12 @@ class MapSolverApp:
         if colors_to_use is None:
             raise ValueError("Color map must be provided")
 
-        # Get the terrain element and create maps
+        # Get the current renderer backend
+        current_backend = RendererFactory.get_current_backend()
+
+        # Get the terrain element and create maps with the current backend
         terrain = self.map_view.get_element("terrain")
-        terrain.create_maps(colors_to_use, generator)
+        terrain.create_maps(colors_to_use, generator, current_backend)
 
         # Set the view to show the original map
         self.map_view.set_view(0)
@@ -160,34 +180,56 @@ class MapSolverApp:
         logger.debug("Path solved")
 
     def handle_events(self) -> dict[int, int]:
-        """Handle pygame events and track event occurrences."""
+        """Handle events and track event occurrences."""
         events = {}
-        for event in pygame.event.get():
+
+        # Get the current renderer
+        renderer = RendererFactory.get_current_renderer()
+
+        # Get all events
+        for event in renderer.get_events():
             events.update({event.type: events.get(event.type, 0) + 1})
-            if event.type == pygame.QUIT:
+
+            # Handle quit events
+            if renderer.is_quit_event(event):
                 self.running = False
-            elif event.type == pygame.KEYDOWN:
-                self._handle_key_press(event.key)
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button
-                self._handle_mouse_click(event.pos)
+
+            # Handle key down events
+            elif renderer.is_keydown_event(event):
+                key = renderer.get_key_from_event(event)
+                self._handle_key_press(key)
+
+            # Handle mouse button down events
+            elif renderer.is_mouse_button_down_event(event):
+                if renderer.is_left_mouse_button(event):
+                    pos = renderer.get_mouse_pos_from_event(event)
+                    self._handle_mouse_click(pos)
+
         return events
 
     def _handle_key_press(self, key):
         """Handle single key press events"""
-        if key == pygame.K_q:
+        # Get the current renderer
+        renderer = RendererFactory.get_current_renderer()
+
+        # Map the key to a key name
+        key_name = renderer.handle_key_press(key)
+
+        # Handle the key press based on the key name
+        if key_name == "q":
             self.running = False
-        elif key == pygame.K_n:
+        elif key_name == "n":
             self._handle_new_map()
-        elif key == pygame.K_s:
+        elif key_name == "s":
             # S: Solve a path
             self._handle_solve_path()
-        elif key == pygame.K_h:
+        elif key_name == "h":
             # H: Toggle path visibility
             self._handle_toggle_path_visibility()
-        elif key == pygame.K_v:
+        elif key_name == "v":
             # V: Switch view
             self._handle_view_switch()
-        elif key == pygame.K_t:
+        elif key_name == "t":
             # T: Toggle tooltip
             self._handle_tooltip_toggle()
 
@@ -255,7 +297,7 @@ class MapSolverApp:
                 # Get the geo path element and update its properties
                 geo_path = self.map_view.get_element("geo_path")
                 geo_path.path_points = self.path
-                geo_path.color = pygame.color.THECOLORS["blue"][:3]  # Convert RGBA to RGB
+                geo_path.color = get_color("blue")  # Use backend-independent color utility
                 geo_path.visible = True
 
                 # Update properties for backward compatibility
@@ -265,8 +307,7 @@ class MapSolverApp:
                 self.status_bar.set_text("No path found between the flags")
         except Exception as e:
             self.status_bar.set_text(f"Error solving path: {str(e)}")
-            if self._logger:
-                self._logger.error(f"Error solving path: {str(e)}")
+            self._logger.error(f"Error solving path: {str(e)}")
 
     def _handle_toggle_path_visibility(self):
         """Toggle the visibility of the path"""
@@ -320,23 +361,22 @@ class MapSolverApp:
             self.status_bar.set_text(f"Green flag placed at ({rel_x}, {rel_y})")
 
             # Log both coordinates
-            if self._logger:
-                self._logger.info(f"Red flag: {self.red_flag_pos}, Green flag: {self.green_flag_pos}")
+            self._logger.info(f"Red flag: {self.red_flag_pos}, Green flag: {self.green_flag_pos}")
 
-                # Calculate coordinates on the smaller map
-                block_size = DEFAULT_MAP_SIZE // DEFAULT_BLOCKS
-                small_coords = {
-                    "red_x": self.red_flag_pos[0] // block_size,
-                    "red_y": self.red_flag_pos[1] // block_size,
-                    "green_x": self.green_flag_pos[0] // block_size,
-                    "green_y": self.green_flag_pos[1] // block_size,
-                }
+            # Calculate coordinates on the smaller map
+            block_size = DEFAULT_MAP_SIZE // DEFAULT_BLOCKS
+            small_coords = {
+                "red_x": self.red_flag_pos[0] // block_size,
+                "red_y": self.red_flag_pos[1] // block_size,
+                "green_x": self.green_flag_pos[0] // block_size,
+                "green_y": self.green_flag_pos[1] // block_size,
+            }
 
-                # Log coordinates on the smaller map
-                self._logger.info(
-                    f"Small map - Red flag: ({small_coords['red_x']}, {small_coords['red_y']}), "
-                    f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
-                )
+            # Log coordinates on the smaller map
+            self._logger.info(
+                f"Small map - Red flag: ({small_coords['red_x']}, {small_coords['red_y']}), "
+                f"Green flag: ({small_coords['green_x']}, {small_coords['green_y']})"
+            )
 
         # Update flag positions directly on the Flag objects
         red_flag = self.map_view.get_element("red_flag")
@@ -352,16 +392,21 @@ class MapSolverApp:
 
     def draw(self):
         """Draw everything to the screen"""
-        self.screen.fill(pygame.color.THECOLORS["gray"])
+        # Clear the screen with gray color
+        renderer = RendererFactory.get_current_renderer()
+        renderer.clear(self.screen, (128, 128, 128))  # Gray
 
+        # Draw all widgets
         for widget in self.widgets:
             widget.draw()
 
-        pygame.display.flip()
+        # Present the renderer
+        renderer.present(self.screen)
 
     def run(self):
         """Main game loop"""
-        clock = pygame.time.Clock()
+        # Get the current renderer
+        renderer = RendererFactory.get_current_renderer()
 
         # Initial update of info panel
         self._update_info_panel()
@@ -371,9 +416,9 @@ class MapSolverApp:
             if len(self.handle_events().items()) > 0:
                 self._update_info_panel()
                 self.draw()
-            clock.tick(60)  # 60 FPS
 
-        pygame.quit()
+        # Clean up the renderer
+        renderer.quit()
 
 
 def main():

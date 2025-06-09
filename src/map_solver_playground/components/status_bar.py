@@ -12,7 +12,7 @@ class StatusBar(TextPanel):
 
     def __init__(
         self,
-        screen,
+        renderer,
         screen_width,
         screen_height,
         font,
@@ -24,19 +24,20 @@ class StatusBar(TextPanel):
         Initialize the status bar component.
 
         Args:
-            screen: The pygame screen to draw on
+            renderer: The renderer to use for drawing
             screen_width: The width of the screen
             screen_height: The height of the screen
             font: The font to use for text
             position: The position of the status bar (x, y), defaults to bottom of screen
             size: The size of the status bar (width, height), defaults to screen width x 30
+            color: The color to use for text
         """
         # Default position at the bottom of the screen
         position = position if position else (0, screen_height - 30)
         # Default size is full width and 30 pixels high
         size = size if size else (screen_width, 30)
 
-        super().__init__(screen, screen_width, screen_height, font, position, size, color)
+        super().__init__(renderer, screen_width, screen_height, font, position, size, color)
 
     def draw(self):
         """
@@ -50,7 +51,12 @@ class StatusBar(TextPanel):
         if not self._text or not isinstance(self._text, str):
             return
 
+        # Use the renderer's static methods for text rendering
+        from map_solver_playground.map.render.element.renderer_factory import RendererFactory
+        renderer_class = RendererFactory.get_current_renderer()
+
         # Draw the text
-        text_surface = self.font.render(self._text, True, self.color)
-        text_rect = text_surface.get_rect(midleft=(self.position[0] + 10, self.position[1] + self.size[1] // 2))
-        self.screen.blit(text_surface, text_rect)
+        text_surface = renderer_class.render_text(self.font, self._text, self.color)
+        text_pos = (self.position[0] + 10, self.position[1] + self.size[1] // 2 - 10)  # Approximate midleft
+        # Use the renderer class's blit method instead of the renderer's blit method
+        renderer_class.blit(text_surface, self.renderer, text_pos)

@@ -4,8 +4,6 @@ MapView component for displaying and managing map render in the application.
 
 from typing import Tuple, Optional, Dict
 
-import pygame
-
 from map_solver_playground.components.widget import Widget
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
@@ -22,7 +20,7 @@ class MapView(Widget):
 
     def __init__(
         self,
-        screen: pygame.Surface,
+        renderer,
         screen_width: int,
         screen_height: int,
         terrain: Terrain,
@@ -36,7 +34,7 @@ class MapView(Widget):
         Initialize the map view component.
 
         Args:
-            screen: The pygame screen to draw on
+            renderer: The renderer to use for drawing
             screen_width: The width of the screen
             screen_height: The height of the screen
             terrain: The terrain element to use
@@ -48,7 +46,7 @@ class MapView(Widget):
         """
         position = (x, y)
         size = (screen_width, screen_height)  # Using screen dimensions as default size
-        super().__init__(screen, screen_width, screen_height, position, size)
+        super().__init__(renderer, screen_width, screen_height, position, size)
 
         # For backward compatibility, maintain x and y properties
         self._x: int = x
@@ -246,4 +244,4 @@ class MapView(Widget):
 
             # Use the RendererFactory to render the element
             # image_x and image_y are now 0, representing the origin of the upper-left corner of the view
-            RendererFactory.render(self.screen, element, self.position[0], self.position[1], self.current_view)
+            RendererFactory.render(self.renderer, element, self.position[0], self.position[1], self.current_view)

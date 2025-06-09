@@ -1,7 +1,7 @@
 # Map Solver Playground
 
 A Python application for generating, visualizing, and manipulating 2D map data. This project provides tools for creating
-terrain maps, applying filters, and visualizing the results using Pygame.
+terrain maps, applying filters, and visualizing the results using configurable rendering backends.
 
 ![Map Solver Playground Screenshot](screenshot.png)
 
@@ -10,6 +10,9 @@ terrain maps, applying filters, and visualizing the results using Pygame.
 - Generate terrain maps using various algorithms
 - Apply filters to modify map data
 - Visualize maps with customizable color gradients
+- Multiple rendering backends possible
+    - Pygame (default)
+    - Automatic fallback if the preferred backend is unavailable
 - Modular UI elements architecture
     - All UI elements have a common parent: Widget
     - UI elements implemented:
@@ -51,7 +54,8 @@ uv sync
 
 This project requires Python 3.12 or higher and depends on the following packages:
 
-- pygame >= 2.5.0
+- pygame >= 2.6.1
+- pillow >= 11.2.1
 - numpy >= 1.24.0
 - scipy == 1.15.3
 - networkx == 3.4.2
@@ -70,10 +74,10 @@ Development dependencies:
 Run the main application:
 
 ```bash
-# Using the module
+# Using the module with default Pygame backend
 python -m map_solver_playground
 
-# Or using the installed entry point
+# Or using the installed entry point with Pygame backend
 map-solver
 
 # Run performance tests
@@ -102,19 +106,22 @@ map-solver-perftest
 
 ```
 map_solver_playground/
-├── asset_loader        # Asset loaders
-├── assets              # Common assets
+├── asset_loader/       # Asset loaders
+├── assets/             # Common assets
 ├── components/         # UI components
 ├── map/                # Map data and manipulation
-│   ├── elements/       # Map elements (Flag, GeoPath, etc.)
-│   ├── filters/        # Map filters
+│   ├── filter/         # Map filters
 │   ├── generator/      # Map generation algorithms
+│   ├── helper/         # Helper functions
 │   ├── render/         # Rendering related functions and classes
-│   │   ├── element     # Map element rendering
+│   │   ├── element/    # Map element rendering
 │   ├── solver/         # Map solving algorithms
-│   ├── types/          # Map data types
+│   ├── types/          # Map data types (Flag, GeoPath, Terrain, etc.)
 ├── profile/            # Performance measurement utilities
 └── tests/              # Test suites
+    ├── integration/    # Integration tests
+    ├── performance/    # Performance tests
+    └── unit/           # Unit tests
 ```
 
 ## Testing

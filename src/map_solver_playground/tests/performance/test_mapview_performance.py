@@ -2,7 +2,7 @@
 Performance test for MapView component.
 
 This script tests how many flags can be displayed on a 500x500 terrain
-within 1/30 second (33.33ms).
+within 1/30 seconds (33.33 ms).
 """
 
 import logging
@@ -10,15 +10,15 @@ import os
 import random
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Any, Tuple
 
 import numpy as np
-import pygame
 
-from map_solver_playground.asset_loader.image_loader import load_image_with_transparency
+from map_solver_playground.asset_loader.backend_independent_image_loader import load_image_with_transparency
 from map_solver_playground.components.map_view import MapView
 from map_solver_playground.map.map_data import Map
 from map_solver_playground.map.render.color_maps import ColorGradient
+from map_solver_playground.map.render.element.renderer_factory import RendererFactory, RendererBackend
 from map_solver_playground.map.types.flag import Flag
 from map_solver_playground.map.types.terrain import Terrain
 
@@ -69,7 +69,7 @@ def run_performance_test(num_runs: int = 5) -> List[int]:
         num_runs: The number of test runs to perform
 
     Returns:
-        A list of the maximum number of flags that can be displayed within 1/30 second (33.33ms)
+        A list of the maximum number of flags that can be displayed within 1/30 seconds (33.33 ms)
     """
     results = []
 
@@ -84,10 +84,10 @@ def run_performance_test(num_runs: int = 5) -> List[int]:
 
 def test_mapview_performance() -> int:
     """
-    Test how many flags can be displayed on a 500x500 terrain within 1/30 second (33.33ms).
+    Test how many flags can be displayed on a 500x500 terrain within 1/30 seconds (33.33 ms).
 
     Returns:
-        The maximum number of flags that can be displayed within 1/30 second (33.33ms)
+        The maximum number of flags that can be displayed within 1/30 seconds (33.33 ms)
     """
     # Setup test environment
     screen, map_view = _setup_test_environment()
@@ -110,17 +110,23 @@ def test_mapview_performance() -> int:
     max_flags = _run_test_loop(screen, map_view, flag_images, flag_width, flag_height, test_params)
 
     # Cleanup
-    pygame.quit()
+    renderer = RendererFactory.get_current_renderer()
+    renderer.quit()
 
     return max_flags
 
 
 def _setup_test_environment():
-    """Setup pygame and create map view"""
-    pygame.init()
+    """Setup renderer and create map view"""
+    # Set the renderer backend to pygame
+    RendererFactory.set_backend(RendererBackend.PYGAME)
+
+    # Initialize the renderer
+    renderer = RendererFactory.get_current_renderer()
+    renderer.init()
+
     screen_width, screen_height = 500, 500
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption("MapView Performance Test")
+    _, screen = renderer.create_window(screen_width, screen_height, "MapView Performance Test")
 
     terrain = create_terrain(500)
     map_view = MapView(screen, screen_width, screen_height, terrain, map_size=500)
@@ -130,12 +136,15 @@ def _setup_test_environment():
 
 def _prepare_flag_images():
     """Load and resize flag images if needed"""
+    # Get the current renderer
+    renderer = RendererFactory.get_current_renderer()
+
     red_flag_image = load_image_with_transparency("redflag001.png")
     green_flag_image = load_image_with_transparency("greenflag001.png")
     flag_images = [red_flag_image, green_flag_image]
 
-    flag_width = max(img.get_width() for img in flag_images)
-    flag_height = max(img.get_height() for img in flag_images)
+    flag_width = max(renderer.get_image_width(img) for img in flag_images)
+    flag_height = max(renderer.get_image_height(img) for img in flag_images)
     print(f"Flag dimensions: {flag_width}x{flag_height}")
 
     if flag_width > 100 or flag_height > 100:
@@ -146,6 +155,9 @@ def _prepare_flag_images():
 
 def _resize_flags(flag_images, flag_width, flag_height):
     """Resize flags to appropriate dimensions"""
+    # Get the current renderer
+    renderer = RendererFactory.get_current_renderer()
+
     new_width = min(flag_width, 50)
     new_height = min(flag_height, 50)
     aspect_ratio = flag_width / flag_height
@@ -155,7 +167,7 @@ def _resize_flags(flag_images, flag_width, flag_height):
     else:
         new_width = int(new_height * aspect_ratio)
 
-    resized_images = [pygame.transform.scale(img, (new_width, new_height)) for img in flag_images]
+    resized_images = [renderer.scale_image(img, (new_width, new_height)) for img in flag_images]
     print(f"Resized flags to: {new_width}x{new_height}")
 
     return resized_images, new_width, new_height
@@ -192,9 +204,12 @@ def _run_test_loop(screen, map_view, flag_images, flag_width, flag_height, param
 
 
 def _handle_events():
-    """Handle pygame events"""
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+    """Handle renderer events"""
+    # Get the current renderer
+    renderer = RendererFactory.get_current_renderer()
+
+    for event in renderer.get_events():
+        if renderer.is_quit_event(event):
             return False
     return True
 
@@ -217,11 +232,14 @@ def _add_flag_batch(map_view, flag_images, flag_width, flag_height, num_flags, b
 
 def _measure_frame_time(screen, map_view):
     """Measure time taken to render frame"""
-    screen.fill((0, 0, 0))
+    # Get the current renderer
+    renderer = RendererFactory.get_current_renderer()
+
+    renderer.clear(screen, (0, 0, 0))  # Black
     start_time = time.time()
     map_view.draw()
     end_time = time.time()
-    pygame.display.flip()
+    renderer.present(screen)
     return end_time - start_time
 
 
