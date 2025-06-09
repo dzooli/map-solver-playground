@@ -37,6 +37,17 @@ class BaseElementRenderer(ABC):
         """
         pass
 
+    @classmethod
+    @abstractmethod
+    def clear_texture_cache(cls, element_id=None) -> None:
+        """
+        Clear the texture cache for a specific element or all elements.
+
+        Args:
+            element_id: The ID of the element to clear textures for, or None to clear all textures
+        """
+        pass
+
 
 class BaseFlagRenderer(BaseElementRenderer):
     """

@@ -28,8 +28,8 @@ dependencies = [
     "pydantic>=2.0.0",
     "pillow>=11.2.1",
     "pysdl2-dll>=2.32.0",
-    "pygame>=2.6.1",
     "pysdl2>=0.9.17",
+    "pygame>=2.6.1",
 ]
 
 [project.urls]
@@ -60,6 +60,7 @@ addopts = "-v -k 'not performance'"
 [dependency-groups]
 dev = [
     "black[d]>=25.1.0",
+    "pytest>=8.4.0",
     "pytest-cov>=6.1.1",
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.6.1",

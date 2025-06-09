@@ -3,7 +3,7 @@ This script creates a simple map viewer application with keyboard controls.
 """
 
 import logging
-from typing import Dict, Any, cast, Optional
+from typing import Dict, Any, Optional
 
 # Import backend-independent utilities
 from map_solver_playground.asset_loader.backend_independent_image_loader import load_image_with_transparency
@@ -14,7 +14,7 @@ from map_solver_playground.map.generator import MapGeneratorFactory, MapGenerato
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory, RendererBackend
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
-from map_solver_playground.map.types import Terrain, GeoPath, Flag
+from map_solver_playground.map.types import Terrain
 from map_solver_playground.profile import measure_time
 
 logger: logging.Logger = logging.getLogger("mapsolver")
@@ -43,7 +43,6 @@ class MapSolverApp:
         map_size: int = MAP_SIZE,
         block_size: int = 30,
         colormap: TerrainColorGradient = None,
-        map_logger: logging.Logger = None,
         generator: str = "RecursiveDiamondSquareGenerator",
         renderer_backend: RendererBackend = RendererBackend.PYGAME,
     ):
@@ -144,7 +143,7 @@ class MapSolverApp:
     @measure_time(logger_instance=logger)
     def create_maps(self, colors: TerrainColorGradient = None, generator: Optional[MapGenerator] = None):
         """
-        Create and render map with the specified color gradient.
+        Create and render a map with the specified color gradient.
 
         Args:
             colors: The color gradient to use for map render, defaults to self.colormap
@@ -239,6 +238,14 @@ class MapSolverApp:
         self.status_bar.draw()
         if self.map_view.current_view == 1:
             self.map_view.switch_view()
+
+        # Get the current renderer backend
+        current_backend = RendererFactory.get_current_backend()
+        # Clear the terrain texture cache in a renderer-agnostic way
+        from map_solver_playground.map.render.element.element_renderer_factory import ElementRendererFactory
+
+        ElementRendererFactory.clear_terrain_texture_cache(current_backend)
+
         self.create_maps(None)  # Use the current colormap from MapView
         # Reset flags and click counter when a new map is generated
         self.red_flag_pos = None
@@ -422,7 +429,7 @@ class MapSolverApp:
 
 
 def main():
-    app = MapSolverApp(map_logger=logger)
+    app = MapSolverApp()
     app.run()
 
 
