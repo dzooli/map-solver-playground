@@ -30,6 +30,9 @@ dependencies = [
     "pysdl2-dll>=2.32.0",
     "pysdl2>=0.9.17",
     "pygame>=2.6.1",
+    "pandas>=2.2.0",
+    "typer>=0.9.0",
+    "rich>=13.7.0",
 ]
 
 [project.urls]
@@ -38,7 +41,7 @@ dependencies = [
 
 [project.scripts]
 map-solver = "map_solver_playground.main:main"
-map-solver-perftest = "map_solver_playground.tests.performance.test_mapview_performance:main"
+map-solver-perftest = "map_solver_playground.tests.performance.test_mapview_performance:app"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
