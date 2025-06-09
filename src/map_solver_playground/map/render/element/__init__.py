@@ -19,39 +19,27 @@ __all__ = [
     "RendererFactory", "RendererBackend", "ElementRendererFactory"
 ]
 
-# Try to import Pygame renderer if available
+# We'll import renderers on-demand through the ElementRendererFactory and RendererFactory
+# instead of importing them unconditionally here.
+# This prevents pygame from being initialized when using SDL2.
+
+# Flag to track which renderers are available
 PYGAME_AVAILABLE = False
+SDL2_AVAILABLE = False
+
+# Try to import SDL2 renderer if available, but don't register it yet
 try:
-    from map_solver_playground.map.render.element.pygame_element_renderers import (
-        PygameFlagRenderer,
-        PygameGeoPathRenderer,
-        PygameTerrainRenderer,
-    )
-    from map_solver_playground.map.render.element.pygame_renderer import PygameRenderer
-    PYGAME_AVAILABLE = True
-    # Register the Pygame renderer with the factory
-    RendererFactory.register_renderer(RendererBackend.PYGAME, PygameRenderer)
-    __all__.extend([
-        "PygameFlagRenderer", "PygameGeoPathRenderer", "PygameTerrainRenderer",
-        "PygameRenderer"
-    ])
+    # Just check if the module is importable without actually importing it
+    import sdl2.ext
+    SDL2_AVAILABLE = True
 except ImportError:
     pass
 
-# Try to import SDL2 renderer if available
-SDL2_AVAILABLE = False
+# Try to check if pygame is available, but don't import or initialize it yet
 try:
-    from map_solver_playground.map.render.element.sdl2_renderer import SDL2Renderer
-    from map_solver_playground.map.render.element.sdl2_element_renderers import (
-        SDL2TerrainRenderer,
-        SDL2FlagRenderer,
-        SDL2GeoPathRenderer,
-    )
-    SDL2_AVAILABLE = True
-    # Register the SDL2 renderer with the factory
-    RendererFactory.register_renderer(RendererBackend.SDL2, SDL2Renderer)
-    __all__.extend([
-        "SDL2Renderer", "SDL2TerrainRenderer", "SDL2FlagRenderer", "SDL2GeoPathRenderer"
-    ])
+    # Just check if the module is importable without actually importing it
+    import importlib.util
+    spec = importlib.util.find_spec('pygame')
+    PYGAME_AVAILABLE = spec is not None
 except ImportError:
     pass

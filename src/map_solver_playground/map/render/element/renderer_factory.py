@@ -46,26 +46,7 @@ class RendererFactory:
 
         # If the requested backend is not available, try to register it
         try:
-            if backend == RendererBackend.PYGAME:
-                try:
-                    from map_solver_playground.map.render.element.pygame_renderer import PygameRenderer
-
-                    # Try to initialize pygame to check if the library is available
-                    try:
-                        import pygame
-
-                        pygame.init()
-                        pygame.quit()
-
-                        cls.register_renderer(RendererBackend.PYGAME, PygameRenderer)
-                        cls._current_backend = backend
-                    except Exception as e:
-                        print(f"Warning: Pygame library initialization failed: {str(e)}. Using fallback.")
-                        cls._use_fallback_renderer()
-                except ImportError as e:
-                    print(f"Warning: Pygame renderer import failed: {str(e)}. Using fallback.")
-                    cls._use_fallback_renderer()
-            elif backend == RendererBackend.SDL2:
+            if backend == RendererBackend.SDL2:
                 try:
                     from map_solver_playground.map.render.element.sdl2_renderer import SDL2Renderer
 
@@ -84,6 +65,25 @@ class RendererFactory:
                 except ImportError as e:
                     print(f"Warning: SDL2 renderer import failed: {str(e)}. Using fallback.")
                     cls._use_fallback_renderer()
+            elif backend == RendererBackend.PYGAME:
+                try:
+                    from map_solver_playground.map.render.element.pygame_renderer import PygameRenderer
+
+                    # Try to initialize pygame to check if the library is available
+                    try:
+                        import pygame
+
+                        pygame.init()
+                        pygame.quit()
+
+                        cls.register_renderer(RendererBackend.PYGAME, PygameRenderer)
+                        cls._current_backend = backend
+                    except Exception as e:
+                        print(f"Warning: Pygame library initialization failed: {str(e)}. Using fallback.")
+                        cls._use_fallback_renderer()
+                except ImportError as e:
+                    print(f"Warning: Pygame renderer import failed: {str(e)}. Using fallback.")
+                    cls._use_fallback_renderer()
             else:
                 # If the backend is not supported, use a fallback
                 print(f"Warning: Unsupported renderer backend: {backend.value}. Using fallback.")
@@ -98,8 +98,8 @@ class RendererFactory:
         """
         Use a fallback renderer if the requested renderer is not available.
         First tries to use any already registered renderer.
-        If no renderers are registered, tries to register the pygame renderer.
-        If that fails, tries to register the SDL2 renderer.
+        If no renderers are registered, tries to register the SDL2 renderer.
+        If that fails, tries to register the pygame renderer.
         If that fails, raises an error.
         """
         # If any renderer is already registered, use the first one
@@ -108,27 +108,7 @@ class RendererFactory:
             print(f"Using fallback renderer: {cls._current_backend.value}")
             return
 
-        # Try to register the pygame renderer
-        try:
-            from map_solver_playground.map.render.element.pygame_renderer import PygameRenderer
-
-            # Try to initialize pygame to check if the library is available
-            try:
-                import pygame
-
-                pygame.init()
-                pygame.quit()
-
-                cls.register_renderer(RendererBackend.PYGAME, PygameRenderer)
-                cls._current_backend = RendererBackend.PYGAME
-                print(f"Using fallback renderer: {cls._current_backend.value}")
-                return
-            except Exception as e:
-                print(f"Pygame library initialization failed: {str(e)}")
-        except ImportError as e:
-            print(f"Pygame renderer import failed: {str(e)}")
-
-        # Try to register the SDL2 renderer
+        # Try to register the SDL2 renderer first
         try:
             from map_solver_playground.map.render.element.sdl2_renderer import SDL2Renderer
 
@@ -147,6 +127,26 @@ class RendererFactory:
                 print(f"SDL2 library initialization failed: {str(e)}")
         except ImportError as e:
             print(f"SDL2 renderer import failed: {str(e)}")
+
+        # Try to register the pygame renderer as a last resort
+        try:
+            from map_solver_playground.map.render.element.pygame_renderer import PygameRenderer
+
+            # Try to initialize pygame to check if the library is available
+            try:
+                import pygame
+
+                pygame.init()
+                pygame.quit()
+
+                cls.register_renderer(RendererBackend.PYGAME, PygameRenderer)
+                cls._current_backend = RendererBackend.PYGAME
+                print(f"Using fallback renderer: {cls._current_backend.value}")
+                return
+            except Exception as e:
+                print(f"Pygame library initialization failed: {str(e)}")
+        except ImportError as e:
+            print(f"Pygame renderer import failed: {str(e)}")
 
         # If no renderers are available, raise an error with detailed information
         raise ValueError(

@@ -8,7 +8,7 @@ from map_solver_playground.components.widget import Widget
 from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory
-from map_solver_playground.map.types import MapElement, Flag, Terrain
+from map_solver_playground.map.types import MapElement, Flag, Terrain, GeoPath
 
 TERRAIN_ELEMENT_NAME = "terrain"
 
@@ -198,7 +198,7 @@ class MapView(Widget):
 
         return is_within_safe_area, is_within_map, rel_x, rel_y
 
-    def get_element(self, name: str) -> MapElement:
+    def get_element(self, name: str) -> MapElement | Terrain | Flag | GeoPath:
         """
         Get a map element by its name.
 

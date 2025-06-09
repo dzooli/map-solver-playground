@@ -20,6 +20,18 @@ class PygameFlagRenderer(BaseFlagRenderer):
     Pygame implementation of the flag renderer interface.
     """
 
+    @classmethod
+    def clear_texture_cache(cls, flag_id=None) -> None:
+        """
+        Clear the texture cache for a specific flag or all flags.
+
+        Args:
+            flag_id: The ID of the flag to clear textures for, or None to clear all textures
+        """
+        # Pygame renderer doesn't use a texture cache
+        # It directly blits surfaces to the screen
+        pass
+
     @staticmethod
     def render(
         screen: pygame.Surface,
@@ -130,6 +142,18 @@ class PygameGeoPathRenderer(BaseGeoPathRenderer):
     Pygame implementation of the geo path renderer interface.
     """
 
+    @classmethod
+    def clear_texture_cache(cls, path_id=None) -> None:
+        """
+        Clear the texture cache for a specific geo path or all geo paths.
+
+        Args:
+            path_id: The ID of the geo path to clear textures for, or None to clear all textures
+        """
+        # Pygame renderer doesn't use a texture cache
+        # It directly draws lines on the screen
+        pass
+
     @staticmethod
     def render(
         screen: pygame.Surface,
@@ -193,6 +217,18 @@ class PygameTerrainRenderer(BaseTerrainRenderer):
     """
     Pygame implementation of the terrain renderer interface.
     """
+
+    @classmethod
+    def clear_texture_cache(cls, terrain_id=None) -> None:
+        """
+        Clear the texture cache for a specific terrain or all terrains.
+
+        Args:
+            terrain_id: The ID of the terrain to clear textures for, or None to clear all textures
+        """
+        # Pygame renderer doesn't use a texture cache
+        # It directly blits surfaces to the screen
+        pass
 
     @staticmethod
     def render(

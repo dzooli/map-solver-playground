@@ -12,6 +12,7 @@ terrain maps, applying filters, and visualizing the results using configurable r
 - Visualize maps with customizable color gradients
 - Multiple rendering backends possible
     - Pygame (default)
+    - SDL2 as an alternative backend
     - Automatic fallback if the preferred backend is unavailable
 - Modular UI elements architecture
     - All UI elements have a common parent: Widget
@@ -55,6 +56,8 @@ uv sync
 This project requires Python 3.12 or higher and depends on the following packages:
 
 - pygame >= 2.6.1
+- pysdl2 >= 0.9.17
+- pysdl2-dll >= 2.32.0
 - pillow >= 11.2.1
 - numpy >= 1.24.0
 - scipy == 1.15.3
@@ -68,6 +71,7 @@ Development dependencies:
 - pytest-cov >= 6.1.1
 - pytest-mock >= 3.14.0
 - pytest-xdist >= 3.6.1
+- pytest > 8.4
 
 ## Usage
 
@@ -76,6 +80,9 @@ Run the main application:
 ```bash
 # Using the module with default Pygame backend
 python -m map_solver_playground
+
+# Using the module with SDL2 backend
+python -m map_solver_playground.run_sdl2_app
 
 # Or using the installed entry point with Pygame backend
 map-solver
