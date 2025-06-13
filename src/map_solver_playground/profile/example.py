@@ -2,18 +2,18 @@
 Example usage of the profile measurement utilities.
 """
 
-import logging
+import sys
 import time
+from loguru import logger
 
 from map_solver_playground.profile.timing import measure_time
 
 # Configure a custom logger
-custom_logger = logging.getLogger("custom_timing")
-custom_logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture the timing logs
-custom_logger.propagate = False  # Prevent propagation to the root logger to avoid duplicate logs
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-custom_logger.addHandler(handler)
+# Remove default handler
+logger.remove()
+# Add a handler with a specific format to match the previous logging format
+custom_logger = logger.bind(name="custom_timing")
+logger.add(sys.stderr, format="{time:YYYY-MM-DD HH:mm:ss} - {extra[name]} - {level} - {message}", level="DEBUG")
 
 
 @measure_time
