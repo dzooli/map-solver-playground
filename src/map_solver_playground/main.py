@@ -2,8 +2,14 @@
 This script creates a simple map viewer application with keyboard controls.
 """
 
-import logging
+import sys
 from typing import Dict, Any, Optional
+from loguru import logger
+
+# Configure loguru logger
+logger.remove()  # Remove default handler
+# Add a handler with a specific format to match the previous logging format
+logger.add(sys.stderr, format="{time:YYYY-MM-DD HH:mm:ss} - mapsolver - {level} - {message}", level="DEBUG")
 
 # Import backend-independent utilities
 from map_solver_playground.asset_loader.backend_independent_image_loader import load_image_with_transparency
@@ -16,18 +22,6 @@ from map_solver_playground.map.render.element.renderer_factory import RendererFa
 from map_solver_playground.map.solver import MapSolverFactory, MapSolver
 from map_solver_playground.map.types import Terrain
 from map_solver_playground.profile import measure_time
-
-logger: logging.Logger = logging.getLogger("mapsolver")
-logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture the timing logs
-logger.propagate = False  # Prevent propagation to the root logger to avoid duplicate logs
-
-# Remove any existing handlers to avoid duplicate logging
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-logger.addHandler(handler)
 
 # Default solver to use for pathfinding
 DEFAULT_SOLVER = "FlowFieldSolver"

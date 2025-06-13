@@ -6,9 +6,9 @@ within 1/30 seconds (33.33 ms) using both PyGame and SDL2 backends.
 Results are displayed using rich console output and can be saved as a CSV file.
 """
 
-import logging
 import os
 import random
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -17,8 +17,8 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import typer
+from loguru import logger
 from rich.console import Console
-from rich.logging import RichHandler
 from rich.progress import Progress, TextColumn, BarColumn, TaskProgressColumn, TimeRemainingColumn
 from rich.table import Table
 
@@ -34,22 +34,29 @@ app = typer.Typer()
 
 console = Console()
 
-# Configure rich handler for console output
-rich_handler = RichHandler(rich_tracebacks=True, console=console)
-rich_handler.setLevel(logging.INFO)
+# Configure loguru logger
+# Remove default handler
+logger.remove()
 
-# Configure file handler for logging to file
+# Configure result directory
 RESULT_DIR = "test-results/performance"
 os.makedirs(RESULT_DIR, exist_ok=True)
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-file_handler = logging.FileHandler(f"{RESULT_DIR}/mapview_performance_{timestamp}.log")
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
-# Configure root logger
-logging.basicConfig(level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[rich_handler, file_handler])
+# Add console handler with rich formatting
+logger.add(
+    lambda msg: console.print(msg, end=""),
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level}</level> | <cyan>{message}</cyan>",
+    level="INFO"
+)
 
-logger = logging.getLogger(__name__)
+# Add file handler
+logger.add(
+    f"{RESULT_DIR}/mapview_performance_{timestamp}.log",
+    format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {message}",
+    level="INFO"
+)
 
 
 def create_terrain(size: int = 500) -> Terrain:

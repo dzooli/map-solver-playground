@@ -2,8 +2,6 @@
 SDL2-based implementation of the MapSolverApp.
 """
 
-import logging
-
 from map_solver_playground.main import MapSolverApp
 from map_solver_playground.map.render.renderer_backend import RendererBackend
 

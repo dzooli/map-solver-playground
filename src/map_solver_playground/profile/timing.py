@@ -4,16 +4,16 @@ Timing decorators for measuring function execution time.
 
 import functools
 import inspect
-import logging
 import time
 from typing import Callable, Any, TypeVar, cast, Optional, Union
+from loguru import logger as loguru_logger
 
 # Type variable for generic function type
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 def measure_time(
-    func: Optional[F] = None, *, logger_instance: Optional[logging.Logger] = None
+    func: Optional[F] = None, *, logger_instance: Optional[Any] = None
 ) -> Union[Callable[[F], F], F]:
     """
     Decorator that measures the execution time of a function and logs it as a debug message.
@@ -24,6 +24,7 @@ def measure_time(
     Args:
         func: The function to be measured
         logger_instance: Optional logger to use for logging execution time. If not provided, no logging occurs.
+                         Can be either a loguru logger or a standard logging.Logger instance.
 
     Returns:
         The wrapped function with timing measurement
@@ -34,10 +35,10 @@ def measure_time(
         def some_function():
             # function code
 
-        # With custom logger (logs execution time)
-        custom_logger = logging.getLogger("my_custom_logger")
+        # With loguru logger (logs execution time)
+        from loguru import logger
 
-        @measure_time(logger_instance=custom_logger)
+        @measure_time(logger_instance=logger)
         def another_function():
             # function code
     """

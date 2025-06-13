@@ -3,23 +3,15 @@ Test script for the new renderer interfaces.
 """
 
 import sys
-import logging
+from loguru import logger
 
 from map_solver_playground.map.render.renderer_backend import RendererBackend
 from map_solver_playground.main import MapSolverApp
 
 # Set up logging
-logger = logging.getLogger("mapsolver")
-logger.setLevel(logging.DEBUG)
-logger.propagate = False
-
-# Remove any existing handlers to avoid duplicate logging
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-logger.addHandler(handler)
+logger.remove()  # Remove default handler
+# Add a handler with a specific format to match the previous logging format
+logger.add(sys.stderr, format="{time:YYYY-MM-DD HH:mm:ss} - mapsolver - {level} - {message}", level="DEBUG")
 
 
 def test_pygame_renderer():
