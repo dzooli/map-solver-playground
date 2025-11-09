@@ -91,5 +91,4 @@ class FlowFieldSolver(MapSolver):
             List[Tuple[int, int]]: A list of coordinates representing the path from start to goal
         """
         came_from, _ = self._generate_flow_field_np()
-        path = self._extract_path_np(came_from)
-        return path
+        return self._extract_path_np(came_from)
