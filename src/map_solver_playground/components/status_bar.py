@@ -33,9 +33,9 @@ class StatusBar(TextPanel):
             color: The color to use for text
         """
         # Default position at the bottom of the screen
-        position = position if position else (0, screen_height - 30)
+        position = position or (0, screen_height - 30)
         # Default size is full width and 30 pixels high
-        size = size if size else (screen_width, 30)
+        size = size or (screen_width, 30)
 
         super().__init__(renderer, screen_width, screen_height, font, position, size, color)
 

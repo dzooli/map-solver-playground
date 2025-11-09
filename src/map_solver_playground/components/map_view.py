@@ -5,7 +5,7 @@ MapView component for displaying and managing map render in the application.
 from typing import Tuple, Optional, Dict
 
 from map_solver_playground.components.widget import Widget
-from map_solver_playground.constants import DEFAULT_MAP_SIZE, DEFAULT_BLOCKS
+from map_solver_playground.constants import DEFAULT_MAP_SIZE
 from map_solver_playground.map.render.color_maps import ColorGradient, TerrainColorGradient
 from map_solver_playground.map.render.element.renderer_factory import RendererFactory
 from map_solver_playground.map.types import MapElement, Flag, Terrain, GeoPath
@@ -15,7 +15,7 @@ TERRAIN_ELEMENT_NAME = "terrain"
 
 class MapView(Widget):
     """
-    A UI component that handles the render and management of map.
+    A UI component that handles the render and management of the map.
     """
 
     def __init__(
@@ -45,7 +45,7 @@ class MapView(Widget):
             y: The y-coordinate of the MapView's position on the screen
         """
         position = (x, y)
-        size = (screen_width, screen_height)  # Using screen dimensions as default size
+        size = (screen_width, screen_height)  # Using screen dimensions as the default size
         super().__init__(renderer, screen_width, screen_height, position, size)
 
         # For backward compatibility, maintain x and y properties
@@ -59,7 +59,7 @@ class MapView(Widget):
         self.map_elements: Dict[str, MapElement] = {}
 
         # Store the colormap
-        self.colormap: TerrainColorGradient = colormap if colormap else ColorGradient.UNDEFINED
+        self.colormap: TerrainColorGradient = colormap or ColorGradient.UNDEFINED
 
         # Add the terrain element to the map view
         self.add_element(TERRAIN_ELEMENT_NAME, terrain)
@@ -95,21 +95,16 @@ class MapView(Widget):
         """
         self.current_view = 1 - self.current_view
 
-        if self.current_view == 0:
-            message = "Showing original"
-        else:
-            message = "Showing small map"
-
-        return message
+        return "Showing original" if self.current_view == 0 else "Showing small map"
 
     def set_view(self, view_index: int) -> None:
         """
         Set the current view to the specified index.
 
         Args:
-            view_index: The view index to set (0 for original, 1 for small map)
+            view_index: The view index to set (0 for original, 1 for a small map)
         """
-        if view_index in (0, 1):
+        if view_index in {0, 1}:
             self.current_view = view_index
 
     def get_map_info(self) -> str:
@@ -155,20 +150,19 @@ class MapView(Widget):
         # Adjust position to be relative to the MapView's position
         adjusted_pos = (pos[0] - self.position[0], pos[1] - self.position[1])
 
+        safe_x_min = sprite_width // 2
+        safe_y_min = sprite_height // 2
+
         # Calculate the safe area where sprites can be placed without exceeding map boundaries
         # The sprite is centered on the click position, so we need to ensure it's at least half the sprite size away from edges
         if self.map is not None:
             map_width = self.map.width
             map_height = self.map.height
-            safe_x_min = sprite_width // 2
             safe_x_max = map_width - sprite_width // 2
-            safe_y_min = sprite_height // 2
             safe_y_max = map_height - sprite_height // 2
         else:
             # If no map is available, use the MapView dimensions
-            safe_x_min = sprite_width // 2
             safe_x_max = self.screen_width - sprite_width // 2
-            safe_y_min = sprite_height // 2
             safe_y_max = self.screen_height - sprite_height // 2
 
         # Check if position is within safe area
@@ -192,7 +186,7 @@ class MapView(Widget):
                 and sprite_height // 2 <= adjusted_pos[1] <= self.screen_height - sprite_height // 2
             )
 
-        # Calculate coordinates relative to map's upper left corner (which is now at 0,0)
+        # Calculate coordinates relative to the map's upper left corner (which is now at 0,0)
         rel_x = adjusted_pos[0]
         rel_y = adjusted_pos[1]
 
@@ -238,7 +232,7 @@ class MapView(Widget):
             return
 
         for element_name, element in self.map_elements.items():
-            # Only draw flags in high resolution view
+            # Only draw flags in a high-resolution view
             if self.current_view != 0 and isinstance(element, Flag):
                 continue
 

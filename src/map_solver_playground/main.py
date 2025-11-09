@@ -146,7 +146,7 @@ class MapSolverApp:
             generator: The map generator to use for map generation
         """
         # Use the current colormap if none is provided
-        colors_to_use = self.colormap if colors is None else colors
+        colors_to_use = self.colormap or colors
 
         if colors_to_use is None:
             raise ValueError("Color map must be provided")
@@ -183,7 +183,7 @@ class MapSolverApp:
 
         # Get all events
         for event in renderer.get_events():
-            events.update({event.type: events.get(event.type, 0) + 1})
+            events[event.type] = events.get(event.type, 0) + 1
 
             # Handle quit events
             if renderer.is_quit_event(event):
