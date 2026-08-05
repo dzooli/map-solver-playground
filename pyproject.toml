@@ -26,7 +26,7 @@ dependencies = [
     "networkx==3.6.1",
     "networkx-astar-path>=1.0.1",
     "pydantic>=2.0.0",
-    "pillow>=11.2.1",
+    "pillow>=12.2.0",
     "pysdl2-dll>=2.32.0",
     "pysdl2>=0.9.17",
     "pygame>=2.6.1",
@@ -64,7 +64,7 @@ addopts = "-v -k 'not performance'"
 [dependency-groups]
 dev = [
     "black[d]>=25.1.0",
-    "pytest>=8.4.0",
+    "pytest>=9.0.3",
     "pytest-cov>=6.1.1",
     "pytest-mock>=3.14.0",
     "pytest-xdist>=3.6.1",
